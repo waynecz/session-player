@@ -1,9 +1,10 @@
-import * as React from "react";
+import React, { Component } from 'react'
+import style from './player.st.css';
 
-function Player() {
-  const [name] = React.useState("mark");
-
-  return <div className="player">{name}</div>;
+export default class Player extends Component<{}, {}> {
+  render() {
+    return (
+      <div {...style('root')}></div>
+    )
+  }
 }
-
-export default Player;

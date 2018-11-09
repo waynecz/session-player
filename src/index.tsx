@@ -1,10 +1,9 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import React from 'react';
+import ReactDOM from 'react-dom';
 import Player from './Player';
-import registerServiceWorker from './registerServiceWorker';
+import * as serviceWorker from './service-worker';
 
-ReactDOM.render(
-  <Player />,
-  document.getElementById('root') as HTMLElement
-);
-registerServiceWorker();
+ReactDOM.render(<Player />, document.getElementById('root'));
+
+// to use service worker, change to .register()
+serviceWorker.register();
