@@ -1,0 +1,10 @@
+@include block(player) {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-areas: "record-list toolbar"
+                       "record-list screen"
+                       "controller controller";
+  grid-template-columns: 250px auto;
+  grid-template-rows: 150px auto 150px;
+}

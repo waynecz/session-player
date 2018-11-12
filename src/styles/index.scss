@@ -1,6 +1,10 @@
 @import '~watson-scss';
+@import "variables";
+@import "layout";
+@import "common";
 
 @import "player";
 @import "controller";
 @import "record-list";
 @import "toolbar";
+@import "screen";

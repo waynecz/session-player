@@ -1,0 +1,13 @@
+@include block(screen) {
+  position: relative;
+  grid-area: screen;
+  width: 100%;
+  height: 100%;
+  background: #3b0b67;
+
+  > #mouseTrail,
+  #mouseClick,
+  #documentMutation {
+    position: absolute;
+  }
+}
