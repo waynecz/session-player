@@ -1,19 +1,31 @@
 {
   "name": "session-player",
   "version": "0.0.1-alpha.0",
-  "private": true,
   "dependencies": {
-    "@stylable/react-scripts": "0.1.16",
+    "@types/jest": "23.3.9",
+    "@types/node": "10.12.5",
+    "@types/react": "16.7.3",
+    "@types/react-dom": "16.0.9",
+    "classnames": "^2.2.6",
     "react": "^16.7.0-alpha.0",
-    "react-dom": "^16.7.0-alpha.0"
+    "react-dom": "^16.7.0-alpha.0",
+    "react-scripts": "2.1.1",
+    "typescript": "3.1.6"
   },
   "scripts": {
-    "start": "stylable-scripts start",
-    "build": "stylable-scripts build",
-    "eject": "stylable-scripts eject"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    "Chrome > 59"
+  ],
   "devDependencies": {
-    "@types/react": "^16.7.1",
-    "@types/react-dom": "^16.0.9"
+    "node-sass": "^4.10.0",
+    "watson-scss": "^1.0.4"
   }
 }
