@@ -10,10 +10,11 @@ function resolve(dir) {
 module.exports = {
   context: resolve('src'),
 
-  output: {
-    path: resolve('dist'),
-    filename: '[name].js'
-  },
+  // output: {
+  //   path: resolve('dist'),
+  //   filename: '[name].js',
+  //   publicPath: './'
+  // },
 
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss'],
@@ -48,12 +49,11 @@ module.exports = {
     ]
   },
   plugins: [
-    new ExtractTextPlugin('../dist/[name].css'),
+    new ExtractTextPlugin('./[name].css'),
 
     new CheckerPlugin(),
 
     new HtmlWebpackPlugin({
-      filename: resolve('dist/index.html'),
       template: resolve('public/index.html'),
       inject: true
     })

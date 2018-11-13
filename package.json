@@ -2,14 +2,6 @@
   "name": "session-player",
   "version": "0.0.1-alpha.0",
   "description": "Consumer of ui-recorder",
-  "dependencies": {
-    "@types/node": "10.12.5",
-    "@types/react": "16.7.3",
-    "@types/react-dom": "16.0.9",
-    "classnames": "^2.2.6",
-    "react": "^16.7.0-alpha.0",
-    "react-dom": "^16.7.0-alpha.0"
-  },
   "author": "Waynecz <451578533@qq.com>",
   "license": "MIT",
   "repository": {
@@ -26,6 +18,14 @@
   "browserslist": [
     "Chrome > 59"
   ],
+  "dependencies": {
+    "@types/node": "10.12.5",
+    "@types/react": "16.7.3",
+    "@types/react-dom": "16.0.9",
+    "classnames": "^2.2.6",
+    "react": "^16.7.0-alpha.0",
+    "react-dom": "^16.7.0-alpha.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
