@@ -1,10 +1,10 @@
-
 export type Hooks = "play" | "pause";
 export interface PlayerClass {
   interval: number; // interval between every frame
-  now: number; // current playback time
+  playTimePoint: number; // current play point-in-time
   playing: boolean; // is it playing now
-  options: PlayerOptions;
+  records?: any[];
+  options?: PlayerOptions;
 
   init(DTO: PlayerInitDTO): void;
 
@@ -22,6 +22,7 @@ export interface PlayerOptions {
   autoplay: boolean;
 }
 export interface PlayerInitDTO {
+  records?: any
   mouseLayer: HTMLCanvasElement;
   clickLayer: HTMLElement;
   domLayer: HTMLIFrameElement;

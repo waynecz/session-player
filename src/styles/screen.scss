@@ -7,9 +7,6 @@
 
   > .fill {
     position: absolute;
-  }
-
-  noscript {
-    display: none;
+    contain: strict;
   }
 }

@@ -4,7 +4,7 @@
     "outDir": "dist",
     "module": "esnext",
     "target": "es5",
-    "lib": ["es6", "dom"],
+    "lib": ["es6", "dom", "esnext"],
     "sourceMap": true,
     "allowJs": true,
     "jsx": "react",
@@ -17,9 +17,9 @@
     "importHelpers": true,
     "strictNullChecks": true,
     "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "allowUnusedLabels": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "typeRoots": ["node_modules/@wayne/ui-recorder/dist/models", "node_modules/@types"],
     "experimentalDecorators": true
   },
   "exclude": [

@@ -14,7 +14,9 @@ const devConfig = merge(baseWebpackConfig, {
 
   devServer: {
     hot: true,
-    disableHostCheck: true
+    disableHostCheck: true,
+    inline: true,
+    noInfo: true
   },
 
   plugins: [

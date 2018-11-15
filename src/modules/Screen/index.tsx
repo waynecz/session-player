@@ -1,18 +1,27 @@
 import domSnapshot from 'domx';
 import Player from 'player';
 import React, { useEffect } from 'react';
-import { _log } from 'tools/log';
+import { _log, _warn } from 'tools/log';
+import { PlayerClass } from 'schemas/player';
 
 type Ref = HTMLIFrameElement | HTMLElement | null;
 
 function Screen() {
+  let player: PlayerClass
   let screen: Ref;
   let mouseLayer: HTMLCanvasElement;
   let clickLayer: HTMLElement;
   let domLayer: HTMLIFrameElement;
 
+
   useEffect(() => {
-    Player.init({ mouseLayer, clickLayer, domLayer, domSnapshot });
+    Player.loadRecords()
+    Player.init({ mouseLayer, clickLayer, domLayer, domSnapshot }).then(playerInstance => {
+      player = playerInstance
+      player.play()
+    }).catch(err => {
+      _warn(err)
+    })
   });
 
   return (
