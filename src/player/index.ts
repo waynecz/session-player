@@ -1,10 +1,9 @@
 import { Record } from "@waynecz/ui-recorder/dist/models/observers";
-import { MyWindow } from "schemas/override";
 import { Hooks, PlayerClass, PlayerInitDTO } from "schemas/player";
 import { isFunction } from "tools/is";
 import { _log, _warn } from "tools/log";
 import { _now } from "tools/utils";
-import DocBufferer from "./document";
+import DocumentBufferer from "./document";
 import FrameWorker, { Frames } from "./frame";
 import Painter from "./painter";
 
@@ -24,24 +23,28 @@ class Player implements PlayerClass {
   // timing related
   public playTimePoint = 0;
   private CFI: number = 0; // abbreviation of `current frame index`
-  private baseTimePoint: number = 0;
   private playTimerId: any;
   private lastStartTime: number;
-
-  // painting layer related
 
   // hooks related
   private queues: Map<Hooks, Function[]> = new Map();
 
   // -------------------------  Start play ---------------------------------- //
-  public play(): void {
+  public play(): boolean {
+    if (!this.inited) {
+      _warn("Player hasn't initiated or document-bufferer initiate failed!");
+      return false;
+    }
     if (!this.framesReady) {
       _warn("frames not ready!");
-      return;
+      return false;
     }
     this.lastStartTime = _now();
     console.time("Play-duration");
-    this.playFrame1by1();
+
+    setImmediate(this.playFrame1by1);
+
+    return true;
   }
 
   public pause() {
@@ -89,9 +92,9 @@ class Player implements PlayerClass {
     domLayer,
     domSnapshot
   }: PlayerInitDTO): Promise<PlayerClass> {
+    // Init Painter & DocumentBufferer ...
     Painter.init(mouseLayer, clickLayer, domLayer);
-
-    const status = await this.getDocumentReady(domSnapshot);
+    const status = await DocumentBufferer.init(domLayer, domSnapshot);
 
     if (status) {
       this.inited = true;
@@ -108,7 +111,7 @@ class Player implements PlayerClass {
   }
 
   private playFrame1by1 = (): void => {
-    const { CFI, frames, interval } = this;
+    const { CFI, frames, interval, lastStartTime } = this;
 
     if (CFI >= frames.length - 1) {
       console.timeEnd("Play-duration");
@@ -128,15 +131,15 @@ class Player implements PlayerClass {
       // *------------------- begins ----------------------------
       // *------------------- at -------------------------------
       // *------------------- here ----------------------------
-      this.paint(trail[i]);
+      Painter.paint(trail[i]);
     }
 
     /**
      * Due to the setTimeout wouldn't excute in delayTime accurately,
      * we should correct the offset as far as possible
      **/
-    const theTimeShouldPassed = currentFrameStartTime! - frames[0].__st__!;
-    const theRealTimePassed = _now() - this.lastStartTime;
+    const theTimeShouldPassed = currentFrameStartTime! - lastStartTime;
+    const theRealTimePassed = _now() - lastStartTime;
     const correction = theRealTimePassed - theTimeShouldPassed;
 
     // move to next frame
@@ -145,68 +148,6 @@ class Player implements PlayerClass {
   };
 
   private nextStep() {}
-
-  private paint(record): void {
-    const recordType2Action = {
-      move: this.paintMouseMove,
-      click: this.paintMouseClick,
-      attr: this.paintDOMMutation,
-      node: this.paintDOMMutation,
-      text: this.paintDOMMutation,
-      form: this.paintFormChange,
-      resize: this.paintResize,
-      scroll: this.paintScroll,
-      default: () => {}
-    };
-
-    const { type } = record;
-
-    const actionName = Object.keys(recordType2Action).includes(type)
-      ? type
-      : "default";
-
-    // distribute action by different type
-    recordType2Action[actionName](record);
-  }
-
-  private paintMouseMove(): void {}
-  private paintMouseClick(): void {}
-  private paintDOMMutation(): void {}
-  private paintFormChange(): void {}
-  private paintResize(): void {}
-  private paintScroll(): void {}
-
-  private getDocumentReady(domSnapshot: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const playerDocument = this.domLayer.contentDocument;
-
-      if (!playerDocument) {
-        reject(false);
-        return;
-      }
-
-      try {
-        // requestIdleCallback require very new verisons of Chrome, Firefox
-        // more: http://mdn.io/requestIdleCallback
-        (window as MyWindow).requestIdleCallback(() => {
-          playerDocument.write(`<!DOCTYPE html>${domSnapshot}`);
-
-          const noscript = playerDocument.querySelector("noscript");
-
-          if (noscript) {
-            noscript.style.display = "none";
-          }
-
-          DocBufferer.init(playerDocument);
-
-          resolve(true);
-        });
-      } catch (err) {
-        // TODO: render failed message to Screen
-        reject(err);
-      }
-    });
-  }
 }
 
 export default new Player();

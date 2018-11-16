@@ -9,14 +9,13 @@ export interface Frame {
 
 export type Frames = Array<Frame>;
 
-class FrameWorker {
+class FrameWorkerClass {
   public createFrames(records: Record[]): Frames {
-    console.time("[Frame worker]");
     const frames: Frames = [];
     const timeline = records.map(r => r.t);
     const interval = Player.interval;
 
-    // start, end record index of this frame
+    // start, end record's index of this frame
     let s: number = 0;
     let e: number = 0;
     let thisFrameStartTime: number = timeline[0];
@@ -34,10 +33,10 @@ class FrameWorker {
       }
     });
 
-    console.timeEnd("[Frame worker]");
-    console.log("​FrameWorker -> frames", frames);
     return frames;
   }
 }
 
-export default new FrameWorker();
+const FrameWorker = new FrameWorkerClass()
+
+export default FrameWorker;
