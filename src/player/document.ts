@@ -28,7 +28,7 @@ class DocumentBuffererClass {
 
   public buffer(ele: ElementX): void {
     if (ele.getAttribute) {
-      let recorderId = ele.getAttribute("redorder-id");
+      let recorderId = ele.getAttribute("recorder-id");
 
       if (recorderId) {
         const id: number = parseInt(recorderId)
@@ -92,5 +92,7 @@ class DocumentBuffererClass {
   }
 }
 const DocumentBufferer = new DocumentBuffererClass()
+
+window.DB = DocumentBufferer
 
 export default DocumentBufferer;

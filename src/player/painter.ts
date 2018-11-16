@@ -135,6 +135,7 @@ class PainterClass {
   private paintFormChange(record: EventReocrd): void {
     const { k, v, target } = record;
     const targetEle = target && getElementByRecordId(target);
+		console.log("​targetEle", targetEle)
 
     if (targetEle) {
       targetEle[k!] = v;
@@ -175,10 +176,10 @@ class PainterClass {
           offsetWidth: screenWidth
         } = this.screen;
 
-        const widthScale = screenWidth / canvasWidth;
-        const heightScale = screenHeight / canvasHeight;
+        const widthScale: number = screenWidth / canvasWidth;
+        const heightScale: number = screenHeight / canvasHeight;
 
-        const finalScale = Math.min(widthScale, heightScale);
+        const finalScale: number = Math.min(widthScale, heightScale);
 
         this.canvas.style.transform = `scale(${finalScale}) translate(-50%, -50%)`;
         this.canvas.style.opacity = "1";

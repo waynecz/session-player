@@ -10,7 +10,7 @@ import Painter from "./painter";
 const trail = require("trail.json");
 class Player implements PlayerClass {
   // settings related
-  public interval = 60;
+  public interval = 100;
 
   // player status related
   public playing = false;
@@ -35,10 +35,12 @@ class Player implements PlayerClass {
       _warn("Player hasn't initiated or document-bufferer initiate failed!");
       return false;
     }
+    
     if (!this.framesReady) {
       _warn("frames not ready!");
       return false;
     }
+
     this.lastStartTime = _now();
     console.time("Play-duration");
 
