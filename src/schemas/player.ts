@@ -24,6 +24,7 @@ export interface PlayerOptions {
 export interface PlayerInitDTO {
   records?: any
   mouseLayer: HTMLCanvasElement;
+  canvas: HTMLElement;
   clickLayer: HTMLElement;
   domLayer: HTMLIFrameElement;
   domSnapshot: string;

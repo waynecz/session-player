@@ -16,6 +16,7 @@ function Layout() {
       <Toolbar />
       <Screen />
       <Controller />
+      <div className="player_gap" />
     </section>
   );
 }

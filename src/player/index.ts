@@ -90,10 +90,11 @@ class Player implements PlayerClass {
     mouseLayer,
     clickLayer,
     domLayer,
-    domSnapshot
+    domSnapshot,
+    canvas
   }: PlayerInitDTO): Promise<PlayerClass> {
     // Init Painter & DocumentBufferer ...
-    Painter.init(mouseLayer, clickLayer, domLayer);
+    Painter.init(mouseLayer, clickLayer, domLayer, canvas);
     const status = await DocumentBufferer.init(domLayer, domSnapshot);
 
     if (status) {
@@ -112,7 +113,6 @@ class Player implements PlayerClass {
 
   private playFrame1by1 = (): void => {
     const { CFI, frames, interval, lastStartTime } = this;
-
     if (CFI >= frames.length - 1) {
       console.timeEnd("Play-duration");
 
@@ -127,9 +127,9 @@ class Player implements PlayerClass {
     } = frames[CFI];
 
     for (let i = startRecordIndex; i <= endRecordIndex; i++) {
-      // *------------------- Paint ------------------------------
-      // *------------------- begins ----------------------------
-      // *------------------- at -------------------------------
+      // *------------------- Paint ---------------------------
+      // *------------------- begins --------------------------
+      // *------------------- at ------------------------------
       // *------------------- here ----------------------------
       Painter.paint(trail[i]);
     }

@@ -2,12 +2,12 @@ import { Record } from "@waynecz/ui-recorder/dist/models/observers";
 import Player from "player";
 
 export interface Frame {
-  0: number
-  1: number
-  __st__?: number
+  0: number;
+  1: number;
+  __st__?: number;
 }
 
-export type Frames = Array<Frame>;
+export type Frames = Frame[];
 
 class FrameWorkerClass {
   public createFrames(records: Record[]): Frames {
@@ -18,18 +18,20 @@ class FrameWorkerClass {
     // start, end record's index of this frame
     let s: number = 0;
     let e: number = 0;
-    let thisFrameStartTime: number = timeline[0];
+    let thisFrameStartTime: number = timeline[0]!;
 
     timeline.forEach((time, index) => {
-      if (time - thisFrameStartTime < interval) {
-        e = index;
-      } else if (time - thisFrameStartTime >= interval) {
-        const thisFrame: Frame = [s, e];
-        thisFrame.__st__ = thisFrameStartTime;
+      if (time) {
+        if (time - thisFrameStartTime < interval) {
+          e = index;
+        } else if (time - thisFrameStartTime >= interval) {
+          const thisFrame: Frame = [s, e];
+          thisFrame.__st__ = thisFrameStartTime;
 
-        frames.push(thisFrame);
-        s = e = index;
-        thisFrameStartTime += interval;
+          frames.push(thisFrame);
+          s = e = index;
+          thisFrameStartTime += interval;
+        }
       }
     });
 
@@ -37,6 +39,6 @@ class FrameWorkerClass {
   }
 }
 
-const FrameWorker = new FrameWorkerClass()
+const FrameWorker = new FrameWorkerClass();
 
 export default FrameWorker;
