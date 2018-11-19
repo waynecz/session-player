@@ -1,10 +1,7 @@
-import domSnapshot from "domx";
 import Player from "player";
 import React, { useEffect } from "react";
 import { PlayerClass } from "schemas/player";
 import { _log, _warn } from "tools/log";
-
-type Ref = HTMLIFrameElement | HTMLElement | null;
 
 function Screen() {
   let player: PlayerClass;
@@ -13,12 +10,16 @@ function Screen() {
   let clickLayer: HTMLElement;
   let domLayer: HTMLIFrameElement;
 
+  const domSnapshot = JSON.parse(window.localStorage.getItem(
+    "domSnapshot"
+  ) as string);
+
   useEffect(() => {
     Player.loadRecords();
     Player.init({ mouseLayer, clickLayer, domLayer, domSnapshot, canvas })
       .then(playerInstance => {
         player = playerInstance;
-        player.play()
+        player.play();
       })
       .catch(err => {
         _warn(err);

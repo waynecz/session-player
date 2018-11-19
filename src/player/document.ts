@@ -3,7 +3,6 @@ import { _error, _warn } from 'tools/log';
 
 /**
  * Document buffer
- *
  **/
 class DocumentBuffererClass {
   public domSnapshot: string;
@@ -11,12 +10,6 @@ class DocumentBuffererClass {
 
   private RecorderId2Element: Map<number, ElementX> = new Map();
   private Element2RecorderId: Map<ElementX, number | null> = new Map();
-
-  public html2ElementorText(html: string): ElementX {
-    const div = document.createElement('div')
-    div.innerHTML = html
-    return div.firstChild as ElementX
-  }
 
   public getElementByRecordId(id: number): ElementX | undefined {
     return this.RecorderId2Element.get(id);
@@ -26,7 +19,7 @@ class DocumentBuffererClass {
     return this.Element2RecorderId.get(ele);
   }
 
-  public buffer(ele: ElementX): void {
+  private buffer(ele: ElementX): void {
     if (ele.getAttribute) {
       let recorderId = ele.getAttribute("recorder-id");
 
@@ -39,7 +32,7 @@ class DocumentBuffererClass {
     }
   }
 
-  public bufferNewElement(ele: ElementX): void {
+  public bufferNewElement = (ele: ElementX): void => {
     this.buffer(ele);
 
     const { children } = ele;
@@ -82,7 +75,10 @@ class DocumentBuffererClass {
           });
           console.timeEnd("[Doc buffer]");
 
+          (window as any).__DOC_BUF__ = this
+
           resolve(true);
+
         });
       } catch (err) {
         // TODO: render failed message into Screen
@@ -91,8 +87,6 @@ class DocumentBuffererClass {
     });
   }
 }
-const DocumentBufferer = new DocumentBuffererClass()
-
-window.DB = DocumentBufferer
+const DocumentBufferer = new DocumentBuffererClass();
 
 export default DocumentBufferer;

@@ -14,7 +14,7 @@
     transform-origin: 0 0;
     transform: translate(-50%, -50%);
     contain: strict;
-    opacity: 0;
+    // opacity: 0;
     transition: .2s $perfect-timing opacity;
 
     > .fill {

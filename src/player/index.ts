@@ -7,10 +7,13 @@ import DocumentBufferer from "./document";
 import FrameWorker, { Frames } from "./frame";
 import Painter from "./painter";
 
-const trail = require("trail.json");
+const trail: any[] = JSON.parse(window.localStorage.getItem("trail") || "[]");
+
+trail.unshift({ type: "resize", w: 1440, h: 900, t: 10 });
+
 class Player implements PlayerClass {
   // settings related
-  public interval = 100;
+  public interval = 60;
 
   // player status related
   public playing = false;
@@ -32,10 +35,10 @@ class Player implements PlayerClass {
   // -------------------------  Start play ---------------------------------- //
   public play(): boolean {
     if (!this.inited) {
-      _warn("Player hasn't initiated or document-bufferer initiate failed!");
+      _warn("Player hasn't initiated or Document-bufferer initiate failed!");
       return false;
     }
-    
+
     if (!this.framesReady) {
       _warn("frames not ready!");
       return false;
@@ -133,7 +136,13 @@ class Player implements PlayerClass {
       // *------------------- begins --------------------------
       // *------------------- at ------------------------------
       // *------------------- here ----------------------------
-      Painter.paint(trail[i]);
+      try {
+        Painter.paint(trail[i]);
+      } catch (err) {
+        _log(i);
+        _log(trail[i]);
+        _warn(err);
+      }
     }
 
     /**
@@ -146,7 +155,7 @@ class Player implements PlayerClass {
 
     // move to next frame
     this.CFI += 1;
-    this.playTimerId = setTimeout(this.playFrame1by1, interval - correction);
+    this.playTimerId = setTimeout(this.playFrame1by1, interval - 0);
   };
 
   private nextStep() {}

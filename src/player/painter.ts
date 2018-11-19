@@ -1,22 +1,25 @@
 import { EventReocrd } from "@waynecz/ui-recorder/dist/models/observers/event";
 import { DOMMutationRecord } from "@waynecz/ui-recorder/dist/models/observers/mutation";
+import { ElementX } from "schemas/override";
+import { _log, _warn } from "tools/log";
+import { _now, _safeDivision, _throttle } from "tools/utils";
 import DocumentBufferer from "./document";
-import { _throttle, _now } from 'tools/utils';
 
-let {
-  getElementByRecordId,
-  html2ElementorText,
-  bufferNewElement
-} = DocumentBufferer;
+let { getElementByRecordId, bufferNewElement } = DocumentBufferer;
 getElementByRecordId = getElementByRecordId.bind(DocumentBufferer);
 bufferNewElement = bufferNewElement.bind(DocumentBufferer);
 
 declare var ResizeObserver;
 
 class PainterClass {
+  /**
+   * Note:
+   * screen includes canvas
+   * canvas is composited with mouseLayer + clickLayer + domLayer
+   */
+  private screen: HTMLElement;
   private mouseLayer: HTMLCanvasElement;
   private clickLayer: HTMLElement;
-  private screen: HTMLElement;
   private domLayer: HTMLIFrameElement;
   private canvas: HTMLElement;
 
@@ -35,6 +38,16 @@ class PainterClass {
     default: () => {}
   };
 
+  private wrapperTagMap: object = {
+    tr: "tbody",
+    td: "tr",
+    th: "tr",
+    col: "colgroup",
+    colgroup: "table",
+    thead: "table",
+    tbody: "table"
+  };
+
   public init(mouseLayer, clickLayer, domLayer, canvas) {
     this.mouseLayer = mouseLayer;
     this.clickLayer = clickLayer;
@@ -42,11 +55,11 @@ class PainterClass {
     this.canvas = canvas;
     this.screen = canvas.parentElement;
 
-    const canvasResize = _throttle(this.canvasResize, 200).bind(this)
+    const repositionCanvas = _throttle(this.repositionCanvas, 200).bind(this);
     const resizeObserver = new ResizeObserver(entries => {
       entries.forEach(({ target }) => {
         if (target === this.screen) {
-          canvasResize.call(this)
+          repositionCanvas.call(this);
         }
       });
     });
@@ -58,11 +71,27 @@ class PainterClass {
     const { type } = record;
 
     const actionName = Object.keys(this.recordType2Action).includes(type)
-    ? type
-    : "default";
+      ? type
+      : "default";
 
     // distribute action by different type
     this.recordType2Action[actionName].call(this, record);
+  }
+
+  private html2ElementorText(html: string): ElementX {
+    // list tags below need specific wapper Tag, ensuring not lost original dom structure
+    const matchRst = /^<(tr|td|th|col|colgroup|thead|tbody)[\s\S]*>[\w\W]*?<\/(tr|td|th|col|colgroup|thead|tbody)>$/g.exec(
+      html
+    );
+    let wrapperTagName = "div";
+
+    if (matchRst && matchRst[1]) {
+      wrapperTagName = this.wrapperTagMap[matchRst[1]];
+    }
+
+    const div = document.createElement(wrapperTagName);
+    div.innerHTML = html;
+    return div.firstChild as ElementX;
   }
 
   private paintMouseMove(record): void {}
@@ -70,13 +99,16 @@ class PainterClass {
 
   private paintNodeAddorRemove(record: DOMMutationRecord): void {
     const { add, remove, target } = record;
+    if (target === 164) {
+      debugger;
+    }
     const parentEle = getElementByRecordId(target);
 
     if (parentEle) {
       if (add && add.length) {
         add.forEach(({ html, index }) => {
           if (index || index === 0) {
-            const eleToInsert = html2ElementorText(html);
+            const eleToInsert = this.html2ElementorText(html);
             // https://mdn.io/insertBefore
             parentEle.insertBefore(eleToInsert, parentEle.childNodes[index]);
 
@@ -84,7 +116,7 @@ class PainterClass {
           } else {
             // if index === undefined, html should be a textNode
             // Q: why not appendChild()
-            // A: append() accept DOMString
+            // A: append() can accept a DOMString
             // more: https://mdn.io/append
             parentEle.append(html);
           }
@@ -92,16 +124,21 @@ class PainterClass {
       }
 
       if (remove && remove.length) {
-        remove.forEach(({ target, remaining }) => {
+        remove.forEach(({ target, remaining, index }) => {
           // remove an element
-          if (!remaining && target) {
+          if (target) {
             const eleToRemove = getElementByRecordId(target);
+
             eleToRemove && parentEle.removeChild(eleToRemove);
             return;
           }
 
-          // remove a textNode
-          if (!target && remaining) {
+          if (index) {
+            parentEle.removeChild(parentEle.childNodes[index]);
+          }
+
+          // remove a textNode in a contenteditable element
+          if (remaining) {
             parentEle.innerHTML = remaining;
           }
         });
@@ -135,7 +172,6 @@ class PainterClass {
   private paintFormChange(record: EventReocrd): void {
     const { k, v, target } = record;
     const targetEle = target && getElementByRecordId(target);
-		console.log("​targetEle", targetEle)
 
     if (targetEle) {
       targetEle[k!] = v;
@@ -147,7 +183,7 @@ class PainterClass {
     this.canvasWidth = w;
     this.canvasHeight = h;
 
-    this.canvasResize();
+    this.repositionCanvas();
 
     setImmediate(() => {
       this.canvas.style.width = w + "px";
@@ -164,20 +200,21 @@ class PainterClass {
     }
   }
 
-  private canvasResize(): void {
+  // make Canvas always stay in the center of screen
+  private repositionCanvas(): void {
     this.canvas.style.opacity = "0";
 
     const { canvasWidth, canvasHeight } = this;
 
-    if (screen) {
+    if (this.screen) {
       setImmediate(() => {
         const {
           offsetHeight: screenHeight,
           offsetWidth: screenWidth
         } = this.screen;
 
-        const widthScale: number = screenWidth / canvasWidth;
-        const heightScale: number = screenHeight / canvasHeight;
+        const widthScale = _safeDivision(screenWidth, canvasWidth);
+        const heightScale = _safeDivision(screenHeight, canvasHeight);
 
         const finalScale: number = Math.min(widthScale, heightScale);
 

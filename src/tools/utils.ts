@@ -1,5 +1,7 @@
 export function _now(): number {
-  if (!window.performance) { return Date.now(); }
+  if (!window.performance) {
+    return Date.now();
+  }
   // if user change local time, performance.now() would work accurate still
   return Math.floor(performance.now());
 }
@@ -19,4 +21,13 @@ export function _throttle<T, K>(
       return func.apply(this, args);
     }
   };
+}
+
+export function _safeDivision(
+  molecular: any,
+  denominator: any,
+  def: number = 1
+): number {
+  const result = molecular / denominator;
+  return isNaN(result) ? def : result;
 }
