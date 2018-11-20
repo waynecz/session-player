@@ -1,3 +1,5 @@
 @include block(controller) {
   grid-area: controller;
+  display: flex;
+  align-items: center;
 }

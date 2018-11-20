@@ -1,0 +1,16 @@
+@include block(toolbar) {
+  grid-area: toolbar;
+  display: flex;
+  align-items: center;
+
+  @include element(heading) {
+    font-size: 45px;
+    font-weight: 400;
+  }
+
+  @include element(actions) {
+    flex-grow: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+}

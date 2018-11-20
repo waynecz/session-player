@@ -1,0 +1,11 @@
+@include block(button) {
+  cursor: pointer;
+
+  + .button {
+    margin-left: 20px;
+  }
+
+  @include when(disabled) {
+    color: $disabled;
+  }
+}

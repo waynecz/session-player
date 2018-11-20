@@ -81,6 +81,8 @@ class PainterClass {
 
     // distribute action by different type
     this.recordType2Action[actionName].call(this, record);
+
+    record.played = true
   }
 
   private html2ElementorText(html: string): ElementX {
@@ -139,6 +141,8 @@ class PainterClass {
     if (parentEle) {
       if (add && add.length) {
         add.forEach(({ html, index }) => {
+          if (!html) return;
+
           if (index || index === 0) {
             const eleToInsert = this.html2ElementorText(html);
             const thisRecordId =
@@ -163,21 +167,22 @@ class PainterClass {
       }
 
       if (remove && remove.length) {
-        remove.forEach(({ target, remaining, index }) => {
+        remove.forEach(({ target, remaining, index, type }) => {
           // remove an element
-          if (target) {
+          if (target && type === 'ele') {
             const eleToRemove = getElementByRecordId(target);
 
             eleToRemove && parentEle.removeChild(eleToRemove);
             return;
           }
-
-          if (index) {
+          
+          // remove an textNode with specific index
+          if (index && type === 'text') {
             parentEle.removeChild(parentEle.childNodes[index]);
           }
 
           // remove a textNode in a contenteditable element
-          if (remaining) {
+          if (remaining && type === 'text') {
             parentEle.innerHTML = remaining;
           }
         });

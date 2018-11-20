@@ -15,15 +15,14 @@ function Screen() {
   ) as string);
 
   useEffect(() => {
-    Player.loadRecords();
-    Player.init({ mouseLayer, clickLayer, domLayer, domSnapshot, canvas })
-      .then(playerInstance => {
-        player = playerInstance;
-        player.play();
-      })
-      .catch(err => {
-        _warn(err);
-      });
+    // Player.loadRecords();
+    // Player.init({
+    //   mouseLayer,
+    //   clickLayer,
+    //   domLayer,
+    //   domSnapshot,
+    //   canvas
+    // }).catch(_warn);
   });
 
   return (

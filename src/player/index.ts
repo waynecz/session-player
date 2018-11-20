@@ -1,7 +1,7 @@
 import { Record } from '@waynecz/ui-recorder/dist/models/observers';
 import { Hooks, PlayerClass, PlayerInitDTO } from 'schemas/player';
 import { isFunction } from 'tools/is';
-import { _log, _warn } from 'tools/log';
+import { _log, _warn, _error } from 'tools/log';
 import { _now } from 'tools/utils';
 import DocumentBufferer from './document';
 import FrameWorker, { Frames } from './frame';
@@ -54,6 +54,7 @@ class Player implements PlayerClass {
 
   public pause() {
     clearTimeout(this.playTimerId);
+    this.$emit('pause');
   }
 
   public jump(time: number) {}
@@ -64,6 +65,7 @@ class Player implements PlayerClass {
 
     queues.set(hook, [...existingQ, action]);
   }
+
   public $off(hook: Hooks, thisAction: Function) {
     const Q = this.queues.get(hook) || [];
     if (!Q.length) {
@@ -77,7 +79,8 @@ class Player implements PlayerClass {
       this.queues.set(hook, Q);
     }
   }
-  public $emit(hook: Hooks) {
+
+  public $emit(hook: Hooks, ...args) {
     const Q = this.queues.get(hook) || [];
     if (!Q.length) {
       return;
@@ -85,12 +88,11 @@ class Player implements PlayerClass {
 
     Q.forEach(action => {
       if (isFunction(action)) {
-        action();
+        action(...args);
       }
     });
   }
 
-  /** Init Player */
   public async init({
     mouseLayer,
     clickLayer,
@@ -132,17 +134,21 @@ class Player implements PlayerClass {
     } = frames[CFI];
 
     for (let i = startRecordIndex; i <= endRecordIndex; i++) {
-      // *------------------- Paint ---------------------------
-      // *------------------- begins --------------------------
-      // *------------------- at ------------------------------
-      // *------------------- here ----------------------------
+      // !------------------- Paint ---------------------------
+      // !------------------- begins --------------------------
+      // !------------------- at ------------------------------
+      // !------------------- here ----------------------------
+      const record = trail[i];
       try {
-        Painter.paint(trail[i]);
+        Painter.paint(record);
       } catch (err) {
         _log(i);
-        _log(trail[i]);
-        _warn(err);
+        _error(err);
       }
+
+      const frame = [startRecordIndex, endRecordIndex];
+
+      this.$emit('play', record, frame);
     }
 
     /**
@@ -155,7 +161,7 @@ class Player implements PlayerClass {
 
     // move to next frame
     this.CFI += 1;
-    this.playTimerId = setTimeout(this.playFrame1by1, interval - 0);
+    this.playTimerId = setTimeout(this.playFrame1by1, interval - correction);
   };
 
   private nextStep() {}

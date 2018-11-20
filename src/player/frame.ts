@@ -10,6 +10,9 @@ export interface Frame {
 export type Frames = Frame[];
 
 class FrameWorkerClass {
+  public frames: Frame[] = [];
+  public duration: number = 0;
+
   public createFrames(records: Record[]): Frames {
     const frames: Frames = [];
     const timeline = records.map(r => r.t);
@@ -34,6 +37,10 @@ class FrameWorkerClass {
         }
       }
     });
+
+    this.frames = frames;
+
+    this.duration = records[records.length - 1].t! - records[0].t!;
 
     return frames;
   }

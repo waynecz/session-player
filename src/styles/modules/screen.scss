@@ -36,7 +36,7 @@
     border-radius: 50%;
     background: rgb(108, 55, 255);
     counter-increment: click;
-    transition: 10s cubic-bezier(0.94,-0.01, 1,-0.01);
+    transition: 13s cubic-bezier(1,.2,1,.57);
 
     &::after {
       content: counter(click);
