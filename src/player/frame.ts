@@ -1,5 +1,5 @@
-import { Record } from "@waynecz/ui-recorder/dist/models/observers";
-import Player from "player";
+import { Record } from '@waynecz/ui-recorder/dist/models/observers';
+import Player from 'player';
 
 export interface Frame {
   0: number;

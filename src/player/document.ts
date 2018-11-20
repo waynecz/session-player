@@ -1,5 +1,8 @@
-import { ElementX, MyWindow } from "schemas/override";
+import { ElementX, MyWindow } from 'schemas/override';
 import { _error, _warn } from 'tools/log';
+import { ID_KEY } from '@waynecz/ui-recorder/dist/constants';
+
+const myWindow: MyWindow = window as any;
 
 /**
  * Document buffer
@@ -21,10 +24,10 @@ class DocumentBuffererClass {
 
   private buffer(ele: ElementX): void {
     if (ele.getAttribute) {
-      let recorderId = ele.getAttribute("recorder-id");
+      let recorderId = ele.getAttribute(ID_KEY);
 
       if (recorderId) {
-        const id: number = parseInt(recorderId)
+        const id: number = parseInt(recorderId);
 
         this.Element2RecorderId.set(ele, id);
         this.RecorderId2Element.set(id, ele);
@@ -40,9 +43,12 @@ class DocumentBuffererClass {
     if (children && children.length) {
       Array.from(children).forEach(this.bufferNewElement);
     }
-  }
+  };
 
-  public init(domLayer: HTMLIFrameElement, domSnapshot: string): Promise<boolean> {
+  public init(
+    domLayer: HTMLIFrameElement,
+    domSnapshot: string
+  ): Promise<boolean> {
     this.Element2RecorderId.clear();
     this.RecorderId2Element.clear();
     this.domLayer = domLayer;
@@ -60,25 +66,24 @@ class DocumentBuffererClass {
       try {
         // requestIdleCallback require very new verisons of Chrome, Firefox
         // more: http://mdn.io/requestIdleCallback
-        (window as MyWindow).requestIdleCallback(() => {
+        myWindow.requestIdleCallback(() => {
           layerDoc.write(`<!DOCTYPE html>${domSnapshot}`);
 
-          const noscript = layerDoc.querySelector("noscript");
+          const noscript = layerDoc.querySelector('noscript');
 
           if (noscript) {
-            noscript.style.display = "none";
+            noscript.style.display = 'none';
           }
 
-          console.time("[Doc buffer]");
+          console.time('[Doc buffer]');
           Array.from(layerDoc.all).forEach((ele: ElementX) => {
             this.buffer(ele);
           });
-          console.timeEnd("[Doc buffer]");
+          console.timeEnd('[Doc buffer]');
 
-          (window as any).__DOC_BUF__ = this
+          myWindow.__DOC_BUF__ = this;
 
           resolve(true);
-
         });
       } catch (err) {
         // TODO: render failed message into Screen
@@ -87,6 +92,7 @@ class DocumentBuffererClass {
     });
   }
 }
+
 const DocumentBufferer = new DocumentBuffererClass();
 
 export default DocumentBufferer;

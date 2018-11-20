@@ -14,12 +14,39 @@
     transform-origin: 0 0;
     transform: translate(-50%, -50%);
     contain: strict;
-    // opacity: 0;
+    opacity: 0;
     transition: .2s $perfect-timing opacity;
+    counter-reset: click;
 
     > .fill {
       position: absolute;
       contain: strict;
+    }
+
+    > #mouseLayer {
+      visibility: hidden;
+    }
+  }
+
+  @include element('click-dot') {
+    position: absolute;
+    display: flex;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: rgb(108, 55, 255);
+    counter-increment: click;
+    transition: 10s cubic-bezier(0.94,-0.01, 1,-0.01);
+
+    &::after {
+      content: counter(click);
+      font-size: 12px;
+      font-weight: 100;
+      margin: auto;
+    }
+
+    &.fading {
+      opacity: 0;
     }
   }
 }

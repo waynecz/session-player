@@ -1,9 +1,13 @@
-import { EventReocrd } from "@waynecz/ui-recorder/dist/models/observers/event";
-import { DOMMutationRecord } from "@waynecz/ui-recorder/dist/models/observers/mutation";
-import { ElementX } from "schemas/override";
-import { _log, _warn } from "tools/log";
-import { _now, _safeDivision, _throttle } from "tools/utils";
-import DocumentBufferer from "./document";
+import { ID_KEY } from '@waynecz/ui-recorder/dist/constants';
+import {
+  EventReocrd,
+  MouseReocrd
+} from '@waynecz/ui-recorder/dist/models/observers/event';
+import { DOMMutationRecord } from '@waynecz/ui-recorder/dist/models/observers/mutation';
+import { ElementX } from 'schemas/override';
+import { _log, _warn } from 'tools/log';
+import { _now, _safeDivision, _throttle } from 'tools/utils';
+import DocumentBufferer from './document';
 
 let { getElementByRecordId, bufferNewElement } = DocumentBufferer;
 getElementByRecordId = getElementByRecordId.bind(DocumentBufferer);
@@ -25,6 +29,7 @@ class PainterClass {
 
   private canvasWidth: number;
   private canvasHeight: number;
+  private lastMousePos = { x: 0, y: 0 };
 
   private recordType2Action = {
     move: this.paintMouseMove,
@@ -39,13 +44,13 @@ class PainterClass {
   };
 
   private wrapperTagMap: object = {
-    tr: "tbody",
-    td: "tr",
-    th: "tr",
-    col: "colgroup",
-    colgroup: "table",
-    thead: "table",
-    tbody: "table"
+    tr: 'tbody',
+    td: 'tr',
+    th: 'tr',
+    col: 'colgroup',
+    colgroup: 'table',
+    thead: 'table',
+    tbody: 'table'
   };
 
   public init(mouseLayer, clickLayer, domLayer, canvas) {
@@ -72,7 +77,7 @@ class PainterClass {
 
     const actionName = Object.keys(this.recordType2Action).includes(type)
       ? type
-      : "default";
+      : 'default';
 
     // distribute action by different type
     this.recordType2Action[actionName].call(this, record);
@@ -83,7 +88,7 @@ class PainterClass {
     const matchRst = /^<(tr|td|th|col|colgroup|thead|tbody)[\s\S]*>[\w\W]*?<\/(tr|td|th|col|colgroup|thead|tbody)>$/g.exec(
       html
     );
-    let wrapperTagName = "div";
+    let wrapperTagName = 'div';
 
     if (matchRst && matchRst[1]) {
       wrapperTagName = this.wrapperTagMap[matchRst[1]];
@@ -94,8 +99,35 @@ class PainterClass {
     return div.firstChild as ElementX;
   }
 
-  private paintMouseMove(record): void {}
-  private paintMouseClick(record): void {}
+  private paintMouseMove(record: MouseReocrd): void {
+    const mouseCtx = this.mouseLayer.getContext('2d');
+    const { x: lastX, y: lastY } = this.lastMousePos;
+    const { x, y } = record;
+
+    if (mouseCtx && x && y) {
+      mouseCtx.strokeStyle = 'rgba(239, 35, 35, 0.6)';
+      mouseCtx.lineWidth = 2;
+      mouseCtx.beginPath();
+      mouseCtx.moveTo(lastX || x - 1, lastY || y - 1);
+      mouseCtx.lineTo(x, y);
+      mouseCtx.closePath();
+      mouseCtx.stroke();
+      this.lastMousePos = { x, y };
+    }
+  }
+
+  private paintMouseClick(record: MouseReocrd): void {
+    const { x, y } = record;
+    const dot = document.createElement('div');
+    dot.className = 'screen_click-dot';
+    dot.style.top = y + 'px';
+    dot.style.left = x + 'px';
+    this.clickLayer.append(dot);
+    // after dot dom appended
+    setTimeout(() => {
+      dot.classList.add('fading')
+    }, 10)
+  }
 
   private paintNodeAddorRemove(record: DOMMutationRecord): void {
     const { add, remove, target } = record;
@@ -109,6 +141,13 @@ class PainterClass {
         add.forEach(({ html, index }) => {
           if (index || index === 0) {
             const eleToInsert = this.html2ElementorText(html);
+            const thisRecordId =
+              eleToInsert.getAttribute && eleToInsert.getAttribute(ID_KEY);
+            // element may already existed in parentEle
+            if (parentEle.querySelector(`[${ID_KEY}="${thisRecordId}"]`)) {
+              _warn(`${thisRecordId} already existed!`);
+              return;
+            }
             // https://mdn.io/insertBefore
             parentEle.insertBefore(eleToInsert, parentEle.childNodes[index]);
 
@@ -186,8 +225,8 @@ class PainterClass {
     this.repositionCanvas();
 
     setImmediate(() => {
-      this.canvas.style.width = w + "px";
-      this.canvas.style.height = h + "px";
+      this.canvas.style.width = w + 'px';
+      this.canvas.style.height = h + 'px';
     });
   }
 
@@ -202,7 +241,7 @@ class PainterClass {
 
   // make Canvas always stay in the center of screen
   private repositionCanvas(): void {
-    this.canvas.style.opacity = "0";
+    this.canvas.style.opacity = '0';
 
     const { canvasWidth, canvasHeight } = this;
 
@@ -213,13 +252,16 @@ class PainterClass {
           offsetWidth: screenWidth
         } = this.screen;
 
+        this.mouseLayer.width = canvasWidth;
+        this.mouseLayer.height = canvasHeight;
+
         const widthScale = _safeDivision(screenWidth, canvasWidth);
         const heightScale = _safeDivision(screenHeight, canvasHeight);
 
         const finalScale: number = Math.min(widthScale, heightScale);
 
         this.canvas.style.transform = `scale(${finalScale}) translate(-50%, -50%)`;
-        this.canvas.style.opacity = "1";
+        this.canvas.style.opacity = '1';
       });
     }
   }

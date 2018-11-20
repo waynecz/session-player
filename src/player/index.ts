@@ -1,15 +1,15 @@
-import { Record } from "@waynecz/ui-recorder/dist/models/observers";
-import { Hooks, PlayerClass, PlayerInitDTO } from "schemas/player";
-import { isFunction } from "tools/is";
-import { _log, _warn } from "tools/log";
-import { _now } from "tools/utils";
-import DocumentBufferer from "./document";
-import FrameWorker, { Frames } from "./frame";
-import Painter from "./painter";
+import { Record } from '@waynecz/ui-recorder/dist/models/observers';
+import { Hooks, PlayerClass, PlayerInitDTO } from 'schemas/player';
+import { isFunction } from 'tools/is';
+import { _log, _warn } from 'tools/log';
+import { _now } from 'tools/utils';
+import DocumentBufferer from './document';
+import FrameWorker, { Frames } from './frame';
+import Painter from './painter';
 
-const trail: any[] = JSON.parse(window.localStorage.getItem("trail") || "[]");
+const trail: any[] = JSON.parse(window.localStorage.getItem('trail') || '[]');
 
-trail.unshift({ type: "resize", w: 1440, h: 900, t: 10 });
+trail.unshift({ type: 'resize', w: 1440, h: 900, t: 10 });
 
 class Player implements PlayerClass {
   // settings related
@@ -40,12 +40,12 @@ class Player implements PlayerClass {
     }
 
     if (!this.framesReady) {
-      _warn("frames not ready!");
+      _warn('frames not ready!');
       return false;
     }
 
     this.lastStartTime = _now();
-    console.time("Play-duration");
+    console.time('Play-duration');
 
     setImmediate(this.playFrame1by1);
 
@@ -119,7 +119,7 @@ class Player implements PlayerClass {
   private playFrame1by1 = (): void => {
     const { CFI, frames, interval, lastStartTime } = this;
     if (CFI >= frames.length - 1) {
-      console.timeEnd("Play-duration");
+      console.timeEnd('Play-duration');
 
       this.pause();
       return;

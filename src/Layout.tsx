@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 
-import Controller from "./modules/Controller";
-import RecorderList from "./modules/RecordList";
-import Screen from "./modules/Screen";
-import Toolbar from "./modules/Toolbar";
+import Controller from './modules/Controller';
+import RecorderList from './modules/RecordList';
+import Screen from './modules/Screen';
+import Toolbar from './modules/Toolbar';
 
-import { hot, setConfig } from "react-hot-loader";
+import { hot, setConfig } from 'react-hot-loader';
 
 setConfig({ pureSFC: true } as any);
 

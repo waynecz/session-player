@@ -1,7 +1,7 @@
-import Player from "player";
-import React, { useEffect } from "react";
-import { PlayerClass } from "schemas/player";
-import { _log, _warn } from "tools/log";
+import Player from 'player';
+import React, { useEffect } from 'react';
+import { PlayerClass } from 'schemas/player';
+import { _log, _warn } from 'tools/log';
 
 function Screen() {
   let player: PlayerClass;
@@ -11,7 +11,7 @@ function Screen() {
   let domLayer: HTMLIFrameElement;
 
   const domSnapshot = JSON.parse(window.localStorage.getItem(
-    "domSnapshot"
+    'domSnapshot'
   ) as string);
 
   useEffect(() => {
