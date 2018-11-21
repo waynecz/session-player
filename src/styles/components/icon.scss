@@ -1,5 +1,5 @@
 @include block(icon) {
-  font-size: 30px;
+  font-size: var(--icon-size);
   color: inherit;
   user-select: none;
 }

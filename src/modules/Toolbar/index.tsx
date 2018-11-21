@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Button from 'components/Button';
-import getBEMProvider from 'tools/bem-classname';
+import BEMProvider from 'tools/bem-classname';
 
 export default function Toolbar() {
-  const toolbarClass = getBEMProvider('toolbar');
+  const style = BEMProvider('toolbar');
 
   let [active, setActive] = useState(true);
 
@@ -12,9 +12,9 @@ export default function Toolbar() {
   }
 
   return (
-    <div {...toolbarClass({ active })}>
-      <h1 {...toolbarClass('heading', { active })}>Screen</h1>
-      <div {...toolbarClass('actions')}>
+    <div {...style({ $name: active })}>
+      <h1 {...style('::heading', { $active: active, $name: active, do: active })}>Screen</h1>
+      <div {...style('::actions lr-center')}>
         <Button icon="person" disabled={active}/>
         <Button icon="settings" onClick={onClick}  />
       </div>

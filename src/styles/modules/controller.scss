@@ -2,4 +2,17 @@
   grid-area: controller;
   display: flex;
   align-items: center;
+
+  @include element(progress) {
+    flex-grow: 1;
+    height: 5px;
+    background: $disabled;
+  }
+
+  @include element(indicator) {}
+
+  @include element(actions) {
+    margin-left: 3%;
+    flex-grow: 0;
+  }
 }

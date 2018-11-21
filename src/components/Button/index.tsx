@@ -1,24 +1,25 @@
 import React from 'react';
 import Icon from '../Icon';
 import { _warn } from 'tools/log';
-import getBEMProvider from 'tools/bem-classname';
+import BEMProvider from 'tools/bem-classname';
 
 interface props {
   icon: string;
   text?: string;
   disabled?: boolean;
+  large?: boolean;
   onClick?: (evt: React.MouseEvent) => any;
 }
 
-export default function Button({ icon, text, disabled = false, onClick }: props) {
+export default function Button({ icon, text, disabled = false, onClick, large: $large }: props) {
   if (!icon) _warn('Prop(icon) required!');
 
-  const buttonClass = getBEMProvider('button');
+  const style = BEMProvider('button');
 
   return (
-    <div {...buttonClass({ disabled })} onClick={evt => onClick && onClick(evt)}>
+    <div {...style({ disabled, $large })} onClick={evt => onClick && onClick(evt)}>
       <Icon name={icon} />
-      <span {...buttonClass('text')}>{text}</span>
+      <span {...style('::text')}>{text}</span>
     </div>
   );
 }

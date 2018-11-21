@@ -1,5 +1,6 @@
 @include block(button) {
   cursor: pointer;
+  --icon-size: 30px;
 
   + .button {
     margin-left: 20px;
@@ -7,5 +8,13 @@
 
   @include when(disabled) {
     color: $disabled;
+  }
+
+  @include modifier(large) {
+    --icon-size: 40px;
+
+    + .button {
+      margin-left: 30px;
+    }
   }
 }
