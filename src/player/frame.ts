@@ -1,5 +1,6 @@
 import { Record } from '@waynecz/ui-recorder/dist/models/observers';
 import Player from 'player';
+import ObserverPattern from './observer';
 
 export interface Frame {
   0: number;
@@ -9,11 +10,12 @@ export interface Frame {
 
 export type Frames = Frame[];
 
-class FrameWorkerClass {
+class FrameWorkerClass extends ObserverPattern {
   public frames: Frame[] = [];
   public duration: number = 0;
+  public firstFrameTime: number = 0;
 
-  public createFrames(records: Record[]): Frames {
+  public loadFrames(records: Record[]): Frames {
     const frames: Frames = [];
     const timeline = records.map(r => r.t);
     const interval = Player.interval;
@@ -40,7 +42,11 @@ class FrameWorkerClass {
 
     this.frames = frames;
 
-    this.duration = records[records.length - 1].t! - records[0].t!;
+    this.firstFrameTime = records[1].t!;
+
+    this.duration = frames[frames.length - 1].__st__! - this.firstFrameTime;
+
+    this.$emit('load', this.duration, this.firstFrameTime);
 
     return frames;
   }

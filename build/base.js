@@ -10,12 +10,6 @@ function resolve(dir) {
 module.exports = {
   context: resolve('src'),
 
-  // output: {
-  //   path: resolve('dist'),
-  //   filename: '[name].js',
-  //   publicPath: './'
-  // },
-
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss'],
     plugins: [new TsConfigPathsPlugin()]
@@ -34,9 +28,7 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        use: ExtractTextPlugin.extract({
-          use: 'css-loader!sass-loader'
-        })
+        use: ['style-loader', 'css-loader', 'sass-loader']
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
@@ -49,8 +41,6 @@ module.exports = {
     ]
   },
   plugins: [
-    new ExtractTextPlugin('./[name].css'),
-
     new CheckerPlugin(),
 
     new HtmlWebpackPlugin({

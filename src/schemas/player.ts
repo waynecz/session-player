@@ -1,5 +1,4 @@
-export type Hooks = "play" | "pause";
-export interface PlayerClass {
+export interface IPlayerClass {
   interval: number; // interval between every frame
   playTimePoint: number; // current play point-in-time
   playing: boolean; // is it playing now
@@ -7,10 +6,6 @@ export interface PlayerClass {
   options?: PlayerOptions;
 
   init(DTO: PlayerInitDTO): void;
-
-  $on(hook: Hooks, action: Function): void; // add subscriber
-  $off(hook: Hooks, action: Function): void; // remove subscriber
-  $emit(hook: Hooks): any; // dispatch hook
 
   play(): void;
   pause(): void;

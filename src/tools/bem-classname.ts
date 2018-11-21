@@ -30,9 +30,9 @@ function _joint(Block: string, Element?: string, Modifier?: string): string {
  * @return a method which generate a States reactive className string
  */
 const BEMProvider = function(
-  block: string
+  blockname: string
 ): (classString?: string | States, states?: States) => { className: string } {
-  let Block = block;
+  let Block = blockname;
   let Element: string = '';
   let Modifier: string = '';
 
@@ -62,7 +62,7 @@ const BEMProvider = function(
 
     if (classString && typeof classString === 'object') {
       // only has states or modifiers
-      result.push(block);
+      result.push(Block);
 
       Object.keys(classString).forEach($walkStates(classString));
     } else if (typeof classString === 'string') {
@@ -85,7 +85,7 @@ const BEMProvider = function(
           Modifier = cls.slice(MODIFIER_SIGN.length);
           cls = $BEM();
         } else if (cls === '$B') {
-          cls = Block;  
+          cls = Block;
         }
 
         result.push(cls);
@@ -99,7 +99,7 @@ const BEMProvider = function(
         }
       }
     } else if (!classString && !states) {
-      result.push(block);
+      result.push(Block);
     }
 
     Modifier = '';

@@ -1,59 +1,65 @@
 import Player from 'player';
 import React, { useEffect } from 'react';
-import { PlayerClass } from 'schemas/player';
+import { IPlayerClass } from 'schemas/player';
 import { _log, _warn } from 'tools/log';
+import BEMProvider from 'tools/bem-classname';
 
-function Screen() {
-  let player: PlayerClass;
+export default function Screen() {
+  let player: IPlayerClass;
   let canvas: HTMLElement;
   let mouseLayer: HTMLCanvasElement;
   let clickLayer: HTMLElement;
   let domLayer: HTMLIFrameElement;
+
+  const style = BEMProvider('screen');
 
   const domSnapshot = JSON.parse(window.localStorage.getItem(
     'domSnapshot'
   ) as string);
 
   useEffect(() => {
-    // Player.loadRecords();
-    // Player.init({
-    //   mouseLayer,
-    //   clickLayer,
-    //   domLayer,
-    //   domSnapshot,
-    //   canvas
-    // }).catch(_warn);
+    Player.loadRecords();
+    Player.init({
+      mouseLayer,
+      clickLayer,
+      domLayer,
+      domSnapshot,
+      canvas
+    })
+      .catch(_warn)
+      .then(_ => {
+        Player.play();
+      });
   });
 
   return (
-    <div className="screen">
-      <section ref={ele => (canvas = ele!)} className="screen_canvas">
-        {/* DOM mutations */}
+    <div {...style()}>
+      <section ref={ele => (canvas = ele!)} {...style('::canvas')}>
+        {/* play DOM mutation */}
         <iframe
           ref={ele => (domLayer = ele!)}
-          className="fill"
+          {...style('fill')}
           id="domLayer"
           sandbox="allow-forms allow-same-origin"
           src="about:blank"
           frameBorder="0"
         />
 
-        {/* Mouse trail */}
+        {/* play mouse movement */}
         <canvas
           ref={(ele: HTMLCanvasElement) => (mouseLayer = ele)}
-          className="fill"
+          {...style('fill')}
           id="mouseLayer"
         />
 
-        {/* Mouse click indicators */}
+        {/* play mouse click */}
         <div
           ref={ele => (clickLayer = ele!)}
-          className="fill"
+          {...style('fill')}
           id="clickLayer"
         />
       </section>
+      <div {...style('::session-info')} />
     </div>
   );
 }
-
-export default Screen;

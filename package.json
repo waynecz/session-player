@@ -43,6 +43,7 @@
     "prettier": "^1.14.3",
     "react-hot-loader": "^4.3.12",
     "sass-loader": "^6.0.6",
+    "style-loader": "^0.23.1",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
     "tslint-config-standard": "^8.0.1",

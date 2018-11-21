@@ -1,17 +1,17 @@
 import { Record } from '@waynecz/ui-recorder/dist/models/observers';
-import { Hooks, PlayerClass, PlayerInitDTO } from 'schemas/player';
-import { isFunction } from 'tools/is';
+import { IPlayerClass, PlayerInitDTO } from 'schemas/player';
 import { _log, _warn, _error } from 'tools/log';
 import { _now } from 'tools/utils';
 import DocumentBufferer from './document';
-import FrameWorker, { Frames } from './frame';
+import FrameWorker from './frame';
 import Painter from './painter';
+import ObserverPattern from './observer';
 
 const trail: any[] = JSON.parse(window.localStorage.getItem('trail') || '[]');
 
 trail.unshift({ type: 'resize', w: 1440, h: 900, t: 10 });
 
-class Player implements PlayerClass {
+class PlayerClass extends ObserverPattern implements IPlayerClass {
   // settings related
   public interval = 60;
 
@@ -20,7 +20,6 @@ class Player implements PlayerClass {
   public inited = false;
 
   public records: Record[] = [];
-  public frames: Frames = [];
   public framesReady: boolean = false;
 
   // timing related
@@ -28,9 +27,6 @@ class Player implements PlayerClass {
   private CFI: number = 0; // abbreviation of `current frame index`
   private playTimerId: any;
   private lastStartTime: number;
-
-  // hooks related
-  private queues: Map<Hooks, Function[]> = new Map();
 
   // -------------------------  Start play ---------------------------------- //
   public play(): boolean {
@@ -59,40 +55,6 @@ class Player implements PlayerClass {
 
   public jump(time: number) {}
 
-  public $on(hook: Hooks, action: Function) {
-    const { queues } = this;
-    const existingQ = queues.get(hook) || [];
-
-    queues.set(hook, [...existingQ, action]);
-  }
-
-  public $off(hook: Hooks, thisAction: Function) {
-    const Q = this.queues.get(hook) || [];
-    if (!Q.length) {
-      return;
-    }
-
-    const index = Q.indexOf(thisAction);
-
-    if (index !== -1) {
-      Q.splice(index, 1);
-      this.queues.set(hook, Q);
-    }
-  }
-
-  public $emit(hook: Hooks, ...args) {
-    const Q = this.queues.get(hook) || [];
-    if (!Q.length) {
-      return;
-    }
-
-    Q.forEach(action => {
-      if (isFunction(action)) {
-        action(...args);
-      }
-    });
-  }
-
   public async init({
     mouseLayer,
     clickLayer,
@@ -114,12 +76,13 @@ class Player implements PlayerClass {
   }
 
   public loadRecords() {
-    this.frames = FrameWorker.createFrames(trail);
+    FrameWorker.loadFrames(trail);
     this.framesReady = true;
   }
 
   private playFrame1by1 = (): void => {
-    const { CFI, frames, interval, lastStartTime } = this;
+    const { CFI, interval, lastStartTime } = this;
+    const { frames } = FrameWorker;
     if (CFI >= frames.length - 1) {
       console.timeEnd('Play-duration');
 
@@ -146,11 +109,12 @@ class Player implements PlayerClass {
         _error(err);
       }
 
-      const frame = [startRecordIndex, endRecordIndex];
-
-      this.$emit('play', record, frame);
+      this.$emit('paint', record, frames[CFI]);
     }
 
+
+    this.$emit('play', frames[CFI]);
+    
     /**
      * Due to the setTimeout wouldn't excute in delayTime accurately,
      * we should correct the offset as far as possible
@@ -158,7 +122,7 @@ class Player implements PlayerClass {
     const theTimeShouldPassed = currentFrameStartTime! - lastStartTime;
     const theRealTimePassed = _now() - lastStartTime;
     const correction = theRealTimePassed - theTimeShouldPassed;
-
+    
     // move to next frame
     this.CFI += 1;
     this.playTimerId = setTimeout(this.playFrame1by1, interval - correction);
@@ -167,4 +131,6 @@ class Player implements PlayerClass {
   private nextStep() {}
 }
 
-export default new Player();
+const Player = new PlayerClass();
+
+export default Player;
