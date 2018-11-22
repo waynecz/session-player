@@ -1,25 +1,70 @@
 import React from 'react';
 import BEMProvider from 'tools/bem-classname';
 import Button from 'components/Button';
-import { usePlayDuration, usePlayingTimeChange } from 'player/hooks';
+import {
+  usePlayerDuration,
+  usePlayerCurrentTime,
+  usePlayerStatus
+} from 'player/hooks';
+import { _ms2Duration } from 'tools/utils';
+import Player from 'player';
 
 export default function Controller() {
   const style = BEMProvider('controller');
 
-  const { duration } = usePlayDuration()
-  const { playedDuration } = usePlayingTimeChange()
+  const { duration } = usePlayerDuration();
+  const { currentTime } = usePlayerCurrentTime();
+  const { inited, playing, framesReady } = usePlayerStatus();
 
-  const timeIndicator = `${playedDuration} / ${duration}`
+  const timeIndicator = `${_ms2Duration(currentTime)} / ${_ms2Duration(
+    duration
+  )}`;
+
+  const percent = Math.ceil((currentTime * 100) / (duration || 1));
+
+  const allowInteractive = inited && framesReady;
 
   return (
     <section {...style('$B lr-center')}>
-      <div {...style('::progress')}>
-        <div {...style('::indicator')} data-time={timeIndicator} />
+      <div
+        {...style('::progress')}
+        style={{ '--percent': `${percent}%` } as any}
+        onClick={handleJump}
+      >
+        <div {...style('::button')}/>
       </div>
+      <p {...style('::time')}>{timeIndicator}</p>
       <div {...style('::actions lr-center')}>
-        <Button icon="play_arrow" large={true} />
-        <Button icon="redo" large={true} />
+        {playing ? (
+          <Button
+            icon="pause"
+            disabled={!allowInteractive}
+            onClick={_ => Player.pause()}
+            large={true}
+          />
+        ) : (
+          <Button
+            icon="play_arrow"
+            disabled={!allowInteractive}
+            onClick={_ => Player.play()}
+            large={true}
+          />
+        )}
+
+        <Button
+          icon="redo"
+          disabled={playing || !allowInteractive}
+          large={true}
+        />
       </div>
     </section>
   );
+}
+
+function handleJump(evt: MouseEvent) {
+  const { pageX, target } = evt;
+  
+  const percent = pageX / (target as HTMLDivElement).offsetWidth;
+
+  Player.jump(percent)
 }

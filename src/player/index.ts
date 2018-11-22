@@ -9,7 +9,7 @@ import ObserverPattern from './observer';
 
 const trail: any[] = JSON.parse(window.localStorage.getItem('trail') || '[]');
 
-trail.unshift({ type: 'resize', w: 1440, h: 900, t: 10 });
+trail.unshift({ type: 'resize', w: 1440, h: 900, t: 140 });
 
 class PlayerClass extends ObserverPattern implements IPlayerClass {
   // settings related
@@ -18,20 +18,20 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
   // player status related
   public playing = false;
   public inited = false;
-
-  public records: Record[] = [];
   public framesReady: boolean = false;
 
   // timing related
-  public playTimePoint = 0;
   private CFI: number = 0; // abbreviation of `current frame index`
   private playTimerId: any;
-  private lastStartTime: number;
+  private lastStartPlayTime: number;
+  private frameStartTimeAtLastPlay: number;
 
   // -------------------------  Start play ---------------------------------- //
   public play(): boolean {
     if (!this.inited) {
-      _warn("Player hasn't initiated or Document-bufferer initiate failed!");
+      _warn(
+        "Player hasn't been initiated or Document-bufferer initiate failed!"
+      );
       return false;
     }
 
@@ -40,20 +40,32 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
       return false;
     }
 
-    this.lastStartTime = _now();
-    console.time('Play-duration');
+    this.lastStartPlayTime = _now();
+    this.frameStartTimeAtLastPlay = FrameWorker.frames[this.CFI].__st__!;
 
     setImmediate(this.playFrame1by1);
+    this.playing = true;
+    this.$emit('play');
 
     return true;
   }
 
   public pause() {
     clearTimeout(this.playTimerId);
+    this.playing = false;
     this.$emit('pause');
   }
 
-  public jump(time: number) {}
+  public jump(percent: number) {
+    const nextFrameIndex = ~~(FrameWorker.frames.length * percent);
+    console.log("​PlayerClass -> publicjump -> this.CFI", this.CFI)
+    this.quickPlayback()
+    this.play()
+  }
+
+  private quickPlayback() {
+
+  }
 
   public async init({
     mouseLayer,
@@ -72,19 +84,24 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
 
     (window as any).Player = this;
 
+    this.$emit('init', this.inited);
+
     return this;
   }
 
-  public loadRecords() {
+  public load() {
     FrameWorker.loadFrames(trail);
     this.framesReady = true;
+    this.$emit('framesreadychange', this.framesReady);
   }
 
   private playFrame1by1 = (): void => {
-    const { CFI, interval, lastStartTime } = this;
+    const { CFI, interval, lastStartPlayTime } = this;
     const { frames } = FrameWorker;
+
+    // last frame
     if (CFI >= frames.length - 1) {
-      console.timeEnd('Play-duration');
+      this.$emit('playend');
 
       this.pause();
       return;
@@ -93,36 +110,43 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     const {
       0: startRecordIndex,
       1: endRecordIndex,
-      __st__: currentFrameStartTime
+      __ed__: currentFrameEndTime
     } = frames[CFI];
 
-    for (let i = startRecordIndex; i <= endRecordIndex; i++) {
-      // !------------------- Paint ---------------------------
-      // !------------------- begins --------------------------
-      // !------------------- at ------------------------------
-      // !------------------- here ----------------------------
-      const record = trail[i];
-      try {
-        Painter.paint(record);
-      } catch (err) {
-        _log(i);
-        _error(err);
-      }
+    if ((startRecordIndex || startRecordIndex === 0) && endRecordIndex) {
+      for (let i = startRecordIndex; i <= endRecordIndex; i++) {
+        // ------------------- Paint ---------------------------
+        // ------------------- begins --------------------------
+        // ------------------- at ------------------------------
+        // ------------------- here ----------------------------
+        const record = trail[i];
+        try {
+          Painter.paint(record);
+        } catch (err) {
+          this.pause();
+          _log(i);
+          _error(err);
+        }
 
-      this.$emit('paint', record, frames[CFI]);
+        this.$emit('paint', record, frames[CFI]);
+      }
     }
 
+    this.$emit('playing', frames[CFI]);
 
-    this.$emit('play', frames[CFI]);
-    
     /**
      * Due to the setTimeout wouldn't excute in delayTime accurately,
      * we should correct the offset as far as possible
      **/
-    const theTimeShouldPassed = currentFrameStartTime! - lastStartTime;
-    const theRealTimePassed = _now() - lastStartTime;
-    const correction = theRealTimePassed - theTimeShouldPassed;
-    
+    const theTimeShouldPassed =
+      currentFrameEndTime! - this.frameStartTimeAtLastPlay;
+    const theRealTimePassed = _now() - lastStartPlayTime;
+    let correction = theRealTimePassed - theTimeShouldPassed;
+
+    if (correction < 0) {
+      correction = 0;
+    }
+
     // move to next frame
     this.CFI += 1;
     this.playTimerId = setTimeout(this.playFrame1by1, interval - correction);

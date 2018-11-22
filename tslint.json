@@ -8,6 +8,7 @@
     "prettier": [
       true,
       {
+        "jsx-boolean-value": "never",
         "singleQuote": true
       }
     ]

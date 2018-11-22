@@ -31,3 +31,12 @@ export function _safeDivision(
   const result = molecular / denominator;
   return isNaN(result) ? def : result;
 }
+
+export function _ms2Duration(ms: number): string {
+  const durationInSec = Math.ceil(ms / 1000);
+
+  const mm = ~~(durationInSec / 60);
+  const ss = ~~(durationInSec % 60);
+
+  return `${mm}:${ss < 10 ? '0' + ss : ss}`;
+}

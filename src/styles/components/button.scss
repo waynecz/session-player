@@ -1,6 +1,7 @@
 @include block(button) {
   cursor: pointer;
   --icon-size: 30px;
+  color: $white;
 
   + .button {
     margin-left: 20px;

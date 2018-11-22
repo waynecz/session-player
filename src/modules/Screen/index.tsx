@@ -18,18 +18,14 @@ export default function Screen() {
   ) as string);
 
   useEffect(() => {
-    Player.loadRecords();
+    Player.load();
     Player.init({
       mouseLayer,
       clickLayer,
       domLayer,
       domSnapshot,
       canvas
-    })
-      .catch(_warn)
-      .then(_ => {
-        Player.play();
-      });
+    }).catch(_warn);
   });
 
   return (

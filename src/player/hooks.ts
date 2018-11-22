@@ -3,54 +3,102 @@ import FrameWorker, { Frame } from './frame';
 import Player from 'player';
 import { _throttle } from 'tools/utils';
 
+let setStatus: any;
 
-// --------------------------- usePlayDuration --------------------------
-export function usePlayDuration(): { duration: string; ms: number } {
-  const [time, setTime] = useState('0:00');
-  let ms = 0;
+Player.$on(
+  'init',
+  (status: boolean): void => {
+    const { playing, framesReady } = Player;
+    setStatus &&
+      setStatus({
+        inited: status,
+        playing,
+        framesReady
+      });
+  }
+);
 
-  FrameWorker.$on('load', (duration: number) => {
-    ms = duration;
-    duration = ~~(duration / 1000);
-    const MM = ~~(duration / 60);
-    const SS = duration % 60;
-    setTime(`${MM}:${SS < 10 ? '0' + SS : SS}`);
+Player.$on(
+  'framesreadychange',
+  (status: boolean): void => {
+    const { inited, playing } = Player;
+    setStatus &&
+      setStatus({
+        inited,
+        playing,
+        framesReady: status
+      });
+  }
+);
+
+function playHandler(): void {
+  const { inited, playing, framesReady } = Player;
+  setStatus &&
+    setStatus({
+      inited,
+      playing,
+      framesReady
+    });
+}
+
+Player.$on('pause', playHandler);
+
+Player.$on('play', playHandler);
+
+export function usePlayerStatus(): {
+  inited: boolean;
+  playing: boolean;
+  framesReady: boolean;
+} {
+  const [status, setValue] = useState({
+    inited: false,
+    playing: false,
+    framesReady: false
   });
+  setStatus = setValue;
+  return status;
+}
+
+// --------------------------- usePlayerDuration --------------------------
+let setDuration: any;
+
+FrameWorker.$on(
+  'load',
+  (duration: number): void => {
+    setDuration && setDuration(duration);
+  }
+);
+
+export function usePlayerDuration(): { duration: number } {
+  const [duration, setTime] = useState(0);
+
+  setDuration = setTime;
 
   return {
-    duration: time,
-    ms
+    duration
   };
 }
 
-// --------------------------- usePlayingTimeChange --------------------------
-let currentFrame: Frame;
-let setPlayedDuration: any
-let playedDurationMS: number
+// --------------------------- usePlayerCurrentTime --------------------------
+let setCurrentTime: any;
 
-Player.$on('play', _throttle((frame: Frame) => {
-  currentFrame = frame;
-  onplay()
-}, 1000))
+// TODO: 修复最开始播放的几秒快速跳过的状况
+Player.$on(
+  'playing',
+  _throttle((frame: Frame): void => {
+    const { __ed__ } = frame;
 
-function onplay() {
-  const { __st__: thisFrameStartTime } = currentFrame;
+    const currentTime = __ed__! + Player.interval - FrameWorker.firstFrameTime;
 
-  playedDurationMS = thisFrameStartTime! - FrameWorker.firstFrameTime;
+    setCurrentTime && setCurrentTime(currentTime);
+  }, 1000)
+);
 
-  const playedDuration = ~~(playedDurationMS / 1000)
-  const MM = ~~(playedDuration / 60);
-  const SS = playedDuration % 60;
-
-  setPlayedDuration && setPlayedDuration(`${MM}:${SS < 10 ? '0' + SS : SS}`)
-}
-
-export function usePlayingTimeChange() {
-  const [playedDuration, setTime] = useState('0:00');
-  setPlayedDuration = setTime
+export function usePlayerCurrentTime(): { currentTime: number } {
+  const [currentTime, setTime] = useState(0);
+  setCurrentTime = setTime;
 
   return {
-    playedDuration,
-    ms: playedDurationMS
-  }
+    currentTime
+  };
 }

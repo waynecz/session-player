@@ -13,45 +13,47 @@
     background: $disabled;
     background-clip: content-box;
     cursor: pointer;
-  }
-
-  @include element(indicator) {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right,  mix($primary, #333, 50),  $primary);
-    transform: tx(calc(var(--percent) - 100% + 30px));
-    @include perfect-transition;
-    contain: style;
 
     &::before {
-      $color: mix($primary, #fff, 90);
-
+      content: "";
       position: absolute;
-      content: '';
-      top: -5px;
-      right: -8px;
-      @include circle(15px, $color);
-      box-shadow: 0 0 10px mix($color, #333, 50);
-    }
-
-    &::after {
-      position: absolute;
-      right: -45px;
-      top: 18px;
-      content: attr(data-time);
-      color: #fff;
-      font-size: 20px;
-      font-weight: lighter;
-      transform-origin: 50% 0;
-      transform: scale(0.5);
+      width: 100%;
+      height: 5px;
+      background: mix($primary, #333, 90);
+      transform: tx(calc(var(--percent) - 100%));
+      transition: 1s linear;
+      contain: style;
     }
   }
 
-  @include element(indicator) {}
+  @include element(button) {
+    $color: mix($primary, #fff, 90);
+
+    position: absolute;
+    content: "";
+    top: 8px;
+    transition: 1s linear;
+    will-change: left;
+    left: calc(var(--percent) - 10px);
+    @include circle(19px, $color);
+    box-shadow: 0 0 10px mix($color, #333, 50);
+    cursor: pointer;
+
+    &:hover {
+      background: mix($primary, #fff, 80);
+    }
+  }
+
+  @include element(time) {
+    margin-left: 20px;
+    font-weight: 100;
+    font-size: 12px;
+    color: $white;
+  }
 
   @include element(actions) {
-    margin-left: 3%;
+    margin-left: 4%;
+    margin-right: 0.5%;
     flex-grow: 0;
   }
 }

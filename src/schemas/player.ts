@@ -1,6 +1,5 @@
 export interface IPlayerClass {
   interval: number; // interval between every frame
-  playTimePoint: number; // current play point-in-time
   playing: boolean; // is it playing now
   records?: any[];
   options?: PlayerOptions;
