@@ -1,13 +1,15 @@
 import { ID_KEY } from '@waynecz/ui-recorder/dist/constants';
+
+import { DOMMutationRecord } from '@waynecz/ui-recorder/dist/models/observers/mutation';
+import { ElementX } from 'schemas/override';
+import { _log, _warn, _error } from 'tools/log';
+import { _now, _safeDivision, _throttle } from 'tools/utils';
+import DocumentBufferer from './document';
+
 import {
   EventReocrd,
   MouseReocrd
 } from '@waynecz/ui-recorder/dist/models/observers/event';
-import { DOMMutationRecord } from '@waynecz/ui-recorder/dist/models/observers/mutation';
-import { ElementX } from 'schemas/override';
-import { _log, _warn } from 'tools/log';
-import { _now, _safeDivision, _throttle } from 'tools/utils';
-import DocumentBufferer from './document';
 
 let { getElementByRecordId, bufferNewElement } = DocumentBufferer;
 getElementByRecordId = getElementByRecordId.bind(DocumentBufferer);
@@ -73,16 +75,21 @@ class PainterClass {
   }
 
   public paint(record): void {
-    const { type } = record;
+    try {
+      const { type } = record;
 
-    const actionName = Object.keys(this.recordType2Action).includes(type)
-      ? type
-      : 'default';
+      const actionName = Object.keys(this.recordType2Action).includes(type)
+        ? type
+        : 'default';
 
-    // distribute action by different type
-    this.recordType2Action[actionName].call(this, record);
+      // distribute action by different type
+      this.recordType2Action[actionName].call(this, record);
 
-    record.played = true
+      record.played = true;
+    } catch (err) {
+      _error(record);
+      _error(err);
+    }
   }
 
   private html2ElementorText(html: string): ElementX {
@@ -118,6 +125,13 @@ class PainterClass {
     }
   }
 
+  public clearMouseMove(): void {
+    const mouseCtx = this.mouseLayer.getContext('2d');
+    if (mouseCtx) {
+      mouseCtx.clearRect(0, 0, this.mouseLayer.width, this.mouseLayer.height);
+    }
+  }
+
   private paintMouseClick(record: MouseReocrd): void {
     const { x, y } = record;
     const dot = document.createElement('div');
@@ -127,8 +141,12 @@ class PainterClass {
     this.clickLayer.append(dot);
     // after dot dom appended
     setTimeout(() => {
-      dot.classList.add('fading')
-    }, 10)
+      dot.classList.add('fading');
+    }, 10);
+  }
+
+  public clearMouseClick(): void {
+    this.clickLayer.innerHTML = '';
   }
 
   private paintNodeAddorRemove(record: DOMMutationRecord): void {
@@ -149,7 +167,6 @@ class PainterClass {
               eleToInsert.getAttribute && eleToInsert.getAttribute(ID_KEY);
             // element may already existed in parentEle
             if (parentEle.querySelector(`[${ID_KEY}="${thisRecordId}"]`)) {
-              _warn(`${thisRecordId} already existed!`);
               return;
             }
             // https://mdn.io/insertBefore
@@ -175,7 +192,7 @@ class PainterClass {
             eleToRemove && parentEle.removeChild(eleToRemove);
             return;
           }
-          
+
           // remove an textNode with specific index
           if (index && type === 'text') {
             parentEle.removeChild(parentEle.childNodes[index]);

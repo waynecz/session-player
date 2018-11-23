@@ -21,7 +21,7 @@
       height: 5px;
       background: mix($primary, #333, 90);
       transform: tx(calc(var(--percent) - 100%));
-      transition: 1s linear;
+      //transition: 1s linear;
       contain: style;
     }
   }
@@ -32,7 +32,7 @@
     position: absolute;
     content: "";
     top: 8px;
-    transition: 1s linear;
+    //transition: 1s linear;
     will-change: left;
     left: calc(var(--percent) - 10px);
     @include circle(19px, $color);

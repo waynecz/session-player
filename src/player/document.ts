@@ -1,6 +1,8 @@
 import { ElementX, MyWindow } from 'schemas/override';
 import { _error, _warn } from 'tools/log';
 import { ID_KEY } from '@waynecz/ui-recorder/dist/constants';
+import { resolve } from 'path';
+import { rejects } from 'assert';
 
 const myWindow: MyWindow = window as any;
 
@@ -45,6 +47,26 @@ class DocumentBuffererClass {
     }
   };
 
+  private wash(html: string): string {
+    const escapeScriptTag = /<(script|noscript)[^>]*>[\s\S]*?<\/[^>]*(script|noscript)>/g;
+    const escapeLinkTag = /<link([^>]*js[^>]*)>/g;
+
+    return html.replace(escapeLinkTag, '').replace(escapeScriptTag, '');
+  }
+
+  public reset() {
+    this.domLayer.src = 'about:blank';
+
+    return new Promise((resolve, reject) => {
+      this.domLayer.onload = async () => {
+        await this.init(this.domLayer, this.domSnapshot);
+        resolve()
+      };
+    })
+
+    
+  }
+
   public init(
     domLayer: HTMLIFrameElement,
     domSnapshot: string
@@ -52,10 +74,11 @@ class DocumentBuffererClass {
     this.Element2RecorderId.clear();
     this.RecorderId2Element.clear();
     this.domLayer = domLayer;
-    this.domSnapshot = domSnapshot;
+    this.domSnapshot = this.wash(domSnapshot);
 
     return new Promise((resolve, reject) => {
       const layerDoc = domLayer.contentDocument;
+			console.log("​DocumentBuffererClass -> layerDoc", layerDoc)
 
       if (!layerDoc) {
         reject(false);
@@ -67,7 +90,7 @@ class DocumentBuffererClass {
         // requestIdleCallback require very new verisons of Chrome, Firefox
         // more: http://mdn.io/requestIdleCallback
         myWindow.requestIdleCallback(() => {
-          layerDoc.write(`<!DOCTYPE html>${domSnapshot}`);
+          layerDoc.write(`<!DOCTYPE html>${this.domSnapshot}`);
 
           const noscript = layerDoc.querySelector('noscript');
 

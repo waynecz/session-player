@@ -3,8 +3,8 @@ import Player from 'player';
 import ObserverPattern from './observer';
 
 export interface Frame {
-  0?: number;
-  1?: number;
+  0?: number; // start record index
+  1?: number; // end record index
   __st__?: number; // this frame start time
   __ed__?: number; // this frame end time
 }
@@ -46,6 +46,7 @@ class FrameWorkerClass extends ObserverPattern {
       }
 
       if (thisFrame.length === 1) {
+        // if this frame has no record, clear the temporary start record index set before
         thisFrame.length = 0;
       }
 
@@ -59,26 +60,6 @@ class FrameWorkerClass extends ObserverPattern {
         isLastFrame = true;
       }
     }
-
-    // start, end record's index of this frame
-    // let s: number = 0;
-    // let e: number = 0;
-    // let thisFrameStartTime: number = timeline[0]!;
-
-    // timeline.forEach((time, index) => {
-    //   if (time) {
-    //     if (time - thisFrameStartTime < interval) {
-    //       e = index;
-    //     } else if (time - thisFrameStartTime >= interval) {
-    //       const thisFrame: Frame = [s, e];
-    //       thisFrame.__st__ = thisFrameStartTime;
-
-    //       frames.push(thisFrame);
-    //       s = e = index;
-    //       thisFrameStartTime += interval;
-    //     }
-    //   }
-    // });
 
     this.frames = frames;
 

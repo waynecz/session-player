@@ -5,54 +5,33 @@ import { _throttle } from 'tools/utils';
 
 let setStatus: any;
 
-Player.$on(
-  'init',
-  (status: boolean): void => {
-    const { playing, framesReady } = Player;
-    setStatus &&
-      setStatus({
-        inited: status,
-        playing,
-        framesReady
-      });
-  }
-);
-
-Player.$on(
-  'framesreadychange',
-  (status: boolean): void => {
-    const { inited, playing } = Player;
-    setStatus &&
-      setStatus({
-        inited,
-        playing,
-        framesReady: status
-      });
-  }
-);
-
-function playHandler(): void {
-  const { inited, playing, framesReady } = Player;
+function playerStatusHandler(): void {
+  const { inited, playing, framesReady, over } = Player;
   setStatus &&
     setStatus({
+      over,
       inited,
       playing,
       framesReady
     });
 }
 
-Player.$on('pause', playHandler);
-
-Player.$on('play', playHandler);
+Player.$on('init', playerStatusHandler);
+Player.$on('framesreadychange', playerStatusHandler);
+Player.$on('pause', playerStatusHandler);
+Player.$on('play', playerStatusHandler);
+Player.$on('over', playerStatusHandler);
 
 export function usePlayerStatus(): {
   inited: boolean;
   playing: boolean;
+  over: boolean;
   framesReady: boolean;
 } {
   const [status, setValue] = useState({
     inited: false,
     playing: false,
+    over: false,
     framesReady: false
   });
   setStatus = setValue;

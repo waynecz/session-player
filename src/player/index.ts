@@ -1,4 +1,3 @@
-import { Record } from '@waynecz/ui-recorder/dist/models/observers';
 import { IPlayerClass, PlayerInitDTO } from 'schemas/player';
 import { _log, _warn, _error } from 'tools/log';
 import { _now } from 'tools/utils';
@@ -17,16 +16,17 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
 
   // player status related
   public playing = false;
+  public over = false;
   public inited = false;
   public framesReady: boolean = false;
 
   // timing related
-  private CFI: number = 0; // abbreviation of `current frame index`
+  private currentFrameIndex: number = 0;
   private playTimerId: any;
-  private lastStartPlayTime: number;
-  private frameStartTimeAtLastPlay: number;
+  private lastPlayTime: number;
+  private lastPlayFrameTime: number;
+  private framePlayingLock: boolean = false;
 
-  // -------------------------  Start play ---------------------------------- //
   public play(): boolean {
     if (!this.inited) {
       _warn(
@@ -40,8 +40,8 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
       return false;
     }
 
-    this.lastStartPlayTime = _now();
-    this.frameStartTimeAtLastPlay = FrameWorker.frames[this.CFI].__st__!;
+    this.lastPlayTime = _now();
+    this.lastPlayFrameTime = FrameWorker.frames[this.currentFrameIndex].__st__!;
 
     setImmediate(this.playFrame1by1);
     this.playing = true;
@@ -56,15 +56,101 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     this.$emit('pause');
   }
 
-  public jump(percent: number) {
-    const nextFrameIndex = ~~(FrameWorker.frames.length * percent);
-    console.log("​PlayerClass -> publicjump -> this.CFI", this.CFI)
-    this.quickPlayback()
-    this.play()
+  public async replay() {
+    this.over = false;
+    await DocumentBufferer.reset();
+    Painter.clearMouseClick();
+    Painter.clearMouseMove();
+
+    this.currentFrameIndex = 0;
+    this.$emit('playing', FrameWorker.frames[0]);
+    this.play();
   }
 
-  private quickPlayback() {
+  public async jump(percent: number) {
+    let playingStatusBeforeJump = this.playing;
+    if (playingStatusBeforeJump) {
+      this.pause();
+    }
 
+    const { currentFrameIndex } = this;
+
+    const targetFrameIndex = ~~(FrameWorker.frames.length * percent);
+
+    if (targetFrameIndex > currentFrameIndex) {
+      this.quickPlayASliceOfFrames(currentFrameIndex, targetFrameIndex);
+    }
+
+    if (targetFrameIndex < currentFrameIndex) {
+      await this.quickPlayFromTheBegining(targetFrameIndex);
+    }
+
+    this.currentFrameIndex = targetFrameIndex + 1;
+    this.$emit('playing', FrameWorker.frames[targetFrameIndex]);
+
+    playingStatusBeforeJump && this.play();
+  }
+
+  private async quickPlayFromTheBegining(to: number): Promise<void> {
+    await DocumentBufferer.reset();
+    Painter.clearMouseClick();
+    Painter.clearMouseMove();
+
+    let quickPlayEndRecordIndex: number = 0;
+
+    for (let i = to; i > 0; i--) {
+      const thisFrame = FrameWorker.frames[i];
+
+      if (thisFrame[1]) {
+        quickPlayEndRecordIndex = thisFrame[1];
+        break;
+      }
+    }
+
+    if (quickPlayEndRecordIndex) {
+      for (let i = 0; i <= quickPlayEndRecordIndex; i++) {
+        const record = trail[i];
+        Painter.paint(record);
+      }
+    }
+  }
+
+  /**
+   * play frames between specific two frame indexs
+   * @param from start frame index
+   * @param to end frame index
+   */
+  private quickPlayASliceOfFrames(from: number, to: number): void {
+    const { frames } = FrameWorker;
+    let quickPlayStartRecordIndex: number = 0;
+    let quickPlayEndRecordIndex: number = 0;
+
+    for (let i = from; i < to; i++) {
+      const thisFrame = frames[i];
+      if (thisFrame[0]) {
+        quickPlayStartRecordIndex = thisFrame[0];
+        break;
+      }
+    }
+
+    for (let i = to; i > from; i--) {
+      const thisFrame = frames[i];
+      if (thisFrame[1]) {
+        quickPlayEndRecordIndex = thisFrame[1];
+        break;
+      }
+    }
+
+    if (quickPlayStartRecordIndex && quickPlayEndRecordIndex) {
+      for (
+        let i = quickPlayStartRecordIndex;
+        i <= quickPlayEndRecordIndex;
+        i++
+      ) {
+        const record = trail[i];
+        Painter.paint(record);
+      }
+    }
   }
 
   public async init({
@@ -73,7 +159,7 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     domLayer,
     domSnapshot,
     canvas
-  }: PlayerInitDTO): Promise<PlayerClass> {
+  }: PlayerInitDTO): Promise<void> {
     // Init Painter & DocumentBufferer ...
     Painter.init(mouseLayer, clickLayer, domLayer, canvas);
     const status = await DocumentBufferer.init(domLayer, domSnapshot);
@@ -85,8 +171,6 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     (window as any).Player = this;
 
     this.$emit('init', this.inited);
-
-    return this;
   }
 
   public load() {
@@ -96,12 +180,13 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
   }
 
   private playFrame1by1 = (): void => {
-    const { CFI, interval, lastStartPlayTime } = this;
+    const { currentFrameIndex, interval, lastPlayTime } = this;
     const { frames } = FrameWorker;
 
     // last frame
-    if (CFI >= frames.length - 1) {
-      this.$emit('playend');
+    if (currentFrameIndex >= frames.length - 1) {
+      this.over = true;
+      this.$emit('over');
 
       this.pause();
       return;
@@ -111,7 +196,9 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
       0: startRecordIndex,
       1: endRecordIndex,
       __ed__: currentFrameEndTime
-    } = frames[CFI];
+    } = frames[currentFrameIndex];
+
+    this.framePlayingLock = true;
 
     if ((startRecordIndex || startRecordIndex === 0) && endRecordIndex) {
       for (let i = startRecordIndex; i <= endRecordIndex; i++) {
@@ -120,27 +207,22 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
         // ------------------- at ------------------------------
         // ------------------- here ----------------------------
         const record = trail[i];
-        try {
-          Painter.paint(record);
-        } catch (err) {
-          this.pause();
-          _log(i);
-          _error(err);
-        }
+        Painter.paint(record);
 
-        this.$emit('paint', record, frames[CFI]);
+        this.$emit('paint', record, frames[currentFrameIndex]);
       }
     }
 
-    this.$emit('playing', frames[CFI]);
+    this.framePlayingLock = false;
+
+    this.$emit('playing', frames[currentFrameIndex]);
 
     /**
      * Due to the setTimeout wouldn't excute in delayTime accurately,
      * we should correct the offset as far as possible
      **/
-    const theTimeShouldPassed =
-      currentFrameEndTime! - this.frameStartTimeAtLastPlay;
-    const theRealTimePassed = _now() - lastStartPlayTime;
+    const theTimeShouldPassed = currentFrameEndTime! - this.lastPlayFrameTime;
+    const theRealTimePassed = _now() - lastPlayTime;
     let correction = theRealTimePassed - theTimeShouldPassed;
 
     if (correction < 0) {
@@ -148,7 +230,7 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     }
 
     // move to next frame
-    this.CFI += 1;
+    this.currentFrameIndex += 1;
     this.playTimerId = setTimeout(this.playFrame1by1, interval - correction);
   };
 
