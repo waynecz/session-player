@@ -26,7 +26,6 @@ class PainterClass {
   private screen: HTMLElement;
   private mouseLayer: HTMLCanvasElement;
   private clickLayer: HTMLElement;
-  private domLayer: HTMLIFrameElement;
   private canvas: HTMLElement;
 
   private canvasWidth: number;
@@ -55,10 +54,9 @@ class PainterClass {
     tbody: 'table'
   };
 
-  public init(mouseLayer, clickLayer, domLayer, canvas) {
+  public init(mouseLayer, clickLayer, canvas) {
     this.mouseLayer = mouseLayer;
     this.clickLayer = clickLayer;
-    this.domLayer = domLayer;
     this.canvas = canvas;
     this.screen = canvas.parentElement;
 

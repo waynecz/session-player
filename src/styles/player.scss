@@ -7,6 +7,7 @@
                        "controller controller gap";
   grid-template-columns: 280px 1fr 3%;
   grid-template-rows: 140px 1fr 160px;
+  grid-column-gap: 10px;
 
   @include element(gap) {
     grid-area: gap;

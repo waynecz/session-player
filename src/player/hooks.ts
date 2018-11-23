@@ -6,9 +6,10 @@ import { _throttle } from 'tools/utils';
 let setStatus: any;
 
 function playerStatusHandler(): void {
-  const { inited, playing, framesReady, over } = Player;
+  const { inited, playing, framesReady, over, jumping } = Player;
   setStatus &&
     setStatus({
+      jumping,
       over,
       inited,
       playing,
@@ -17,6 +18,8 @@ function playerStatusHandler(): void {
 }
 
 Player.$on('init', playerStatusHandler);
+Player.$on('jumpstart', playerStatusHandler);
+Player.$on('jumpend', playerStatusHandler);
 Player.$on('framesreadychange', playerStatusHandler);
 Player.$on('pause', playerStatusHandler);
 Player.$on('play', playerStatusHandler);
@@ -25,10 +28,12 @@ Player.$on('over', playerStatusHandler);
 export function usePlayerStatus(): {
   inited: boolean;
   playing: boolean;
+  jumping: boolean;
   over: boolean;
   framesReady: boolean;
 } {
   const [status, setValue] = useState({
+    jumping: false,
     inited: false,
     playing: false,
     over: false,

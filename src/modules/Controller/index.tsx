@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import BEMProvider from 'tools/bem-classname';
 import Button from 'components/Button';
 import {
@@ -14,11 +14,13 @@ export default function Controller() {
 
   const { duration } = usePlayerDuration();
   const { currentTime } = usePlayerCurrentTime();
-  const { inited, playing, framesReady, over } = usePlayerStatus();
+  const { inited, playing, framesReady, over, jumping } = usePlayerStatus();
 
   const timeIndicator = `${_ms2Duration(currentTime)} / ${_ms2Duration(
     duration
   )}`;
+
+  let [rulerPosition, setRulerPosition] = useState('0px');
 
   const percent = Math.ceil((currentTime * 100) / (duration || 1));
 
@@ -27,13 +29,21 @@ export default function Controller() {
   return (
     <section {...style('$B lr-center')}>
       <div
-        {...style('::progress')}
+        {...style('::progress', { jumping })}
         style={{ '--percent': `${percent}%` } as any}
         onClick={handleJump}
+        // onMouseMove={evt => handleRulerMove(evt, setRulerPosition)}
       >
         <div {...style('::button')} />
+
+        <div
+          {...style('::ruler')}
+          style={{ transform: `translateX(${rulerPosition})` }}
+        />
       </div>
+
       <p {...style('::time')}>{timeIndicator}</p>
+
       <div {...style('::actions lr-center')}>
         {over ? (
           <Button
@@ -51,7 +61,7 @@ export default function Controller() {
           />
         ) : (
           <Button
-            icon="play_arrow"
+            icon="play"
             disabled={!allowInteractive}
             onClick={_ => Player.play()}
             large={true}
@@ -59,8 +69,8 @@ export default function Controller() {
         )}
 
         <Button
-          icon="redo"
-          disabled={playing || !allowInteractive}
+          icon="next_step"
+          disabled={playing || !allowInteractive || over}
           large={true}
         />
       </div>
@@ -68,10 +78,16 @@ export default function Controller() {
   );
 }
 
-function handleJump(evt) {
+async function handleJump(evt) {
   const { pageX, target } = evt as MouseEvent;
 
   const percent = pageX / (target as HTMLDivElement).offsetWidth;
 
-  Player.jump(percent);
+  await Player.jump(percent);
+}
+
+function handleRulerMove(evt, setRulerPosition) {
+  const { pageX } = evt as MouseEvent;
+
+  setRulerPosition(`${pageX}px`);
 }

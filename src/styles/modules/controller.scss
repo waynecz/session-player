@@ -1,15 +1,18 @@
 @include block(controller) {
+  $progress-height: 5px;
+
   grid-area: controller;
   display: flex;
   align-items: center;
 
   @include element(progress) {
     --percent: 0%;
+    --trasnsition: transform, left 1s linear;
 
     position: relative;
     flex-grow: 1;
     padding: 15px 0;
-    height: 5px;
+    height: $progress-height;
     background: $disabled;
     background-clip: content-box;
     cursor: pointer;
@@ -18,11 +21,16 @@
       content: "";
       position: absolute;
       width: 100%;
-      height: 5px;
-      background: mix($primary, #333, 90);
+      height: $progress-height;
+      background: mix($primary, #333, 80);
       transform: tx(calc(var(--percent) - 100%));
-      //transition: 1s linear;
+      transition: var(--trasnsition);
       contain: style;
+    }
+
+    @include when(jumping) {
+      --trasnsition: none;
+      pointer-events: none;
     }
   }
 
@@ -32,15 +40,45 @@
     position: absolute;
     content: "";
     top: 8px;
-    //transition: 1s linear;
     will-change: left;
     left: calc(var(--percent) - 10px);
     @include circle(19px, $color);
     box-shadow: 0 0 10px mix($color, #333, 50);
+    transition: var(--trasnsition);
     cursor: pointer;
 
     &:hover {
       background: mix($primary, #fff, 80);
+    }
+  }
+
+  @include element(ruler) {
+    position: absolute;
+    width: 0;
+    height: $progress-height;
+    display: none;
+    transform: tx(0);
+
+    &::before,
+    &::after {
+      // path base on index.scss
+      content: '';
+      position: absolute;
+      display: block;
+      width: 7px;
+      height: 8px;
+      background-image: url("../assets/triangle.svg");
+      left: -3.5px;
+    }
+
+    &::before {
+      top: 0;
+      transform: ty(-16px) rotate(-90deg);
+    }
+
+    &::after {
+      bottom: 0;
+      transform: ty(18px) rotate(90deg);
     }
   }
 

@@ -62,7 +62,7 @@ class FrameWorkerClass extends ObserverPattern {
     }
 
     this.frames = frames;
-
+    
     this.duration = frames[frames.length - 1].__st__! - this.firstFrameTime;
 
     this.$emit('load', this.duration, this.firstFrameTime);

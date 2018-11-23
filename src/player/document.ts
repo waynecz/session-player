@@ -1,8 +1,6 @@
 import { ElementX, MyWindow } from 'schemas/override';
 import { _error, _warn } from 'tools/log';
 import { ID_KEY } from '@waynecz/ui-recorder/dist/constants';
-import { resolve } from 'path';
-import { rejects } from 'assert';
 
 const myWindow: MyWindow = window as any;
 
@@ -63,8 +61,6 @@ class DocumentBuffererClass {
         resolve()
       };
     })
-
-    
   }
 
   public init(
@@ -78,7 +74,6 @@ class DocumentBuffererClass {
 
     return new Promise((resolve, reject) => {
       const layerDoc = domLayer.contentDocument;
-			console.log("​DocumentBuffererClass -> layerDoc", layerDoc)
 
       if (!layerDoc) {
         reject(false);

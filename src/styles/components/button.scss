@@ -2,6 +2,7 @@
   cursor: pointer;
   --icon-size: 30px;
   color: $white;
+  @include perfect-transition;
 
   + .button {
     margin-left: 20px;

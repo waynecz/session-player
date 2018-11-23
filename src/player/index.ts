@@ -16,16 +16,17 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
 
   // player status related
   public playing = false;
+  public jumping = false;
   public over = false;
   public inited = false;
   public framesReady: boolean = false;
+  private recordPainting: boolean = false;
 
   // timing related
   private currentFrameIndex: number = 0;
   private playTimerId: any;
   private lastPlayTime: number;
   private lastPlayFrameTime: number;
-  private framePlayingLock: boolean = false;
 
   public play(): boolean {
     if (!this.inited) {
@@ -68,22 +69,35 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
   }
 
   public async jump(percent: number) {
-    let playingStatusBeforeJump = this.playing;
-    if (playingStatusBeforeJump) {
-      this.pause();
+    if (percent * 100 < 100) {
+      this.over = false;
     }
+    this.jumping = true;
+    this.$emit('jumpstart');
+
+    let playingStatusBeforeJump = this.playing;
+
+    if (playingStatusBeforeJump) this.pause();
 
     const { currentFrameIndex } = this;
 
     const targetFrameIndex = ~~(FrameWorker.frames.length * percent);
 
     if (targetFrameIndex > currentFrameIndex) {
-      this.quickPlayASliceOfFrames(currentFrameIndex, targetFrameIndex);
+      try {
+        this.quickPlayASliceOfFrames(currentFrameIndex, targetFrameIndex);
+      } catch (err) {}
     }
 
     if (targetFrameIndex < currentFrameIndex) {
-      await this.quickPlayFromTheBegining(targetFrameIndex);
+      try {
+        await this.quickPlayFromTheBegining(targetFrameIndex);
+      } catch (err) {}
     }
+
+    this.jumping = false;
+    // use setImmediate for trigging dom change
+    setTimeout(_ => this.$emit('jumpend'), 0);
 
     this.currentFrameIndex = targetFrameIndex + 1;
     this.$emit('playing', FrameWorker.frames[targetFrameIndex]);
@@ -161,7 +175,7 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     canvas
   }: PlayerInitDTO): Promise<void> {
     // Init Painter & DocumentBufferer ...
-    Painter.init(mouseLayer, clickLayer, domLayer, canvas);
+    Painter.init(mouseLayer, clickLayer, canvas);
     const status = await DocumentBufferer.init(domLayer, domSnapshot);
 
     if (status) {
@@ -198,7 +212,7 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
       __ed__: currentFrameEndTime
     } = frames[currentFrameIndex];
 
-    this.framePlayingLock = true;
+    this.recordPainting = true;
 
     if ((startRecordIndex || startRecordIndex === 0) && endRecordIndex) {
       for (let i = startRecordIndex; i <= endRecordIndex; i++) {
@@ -213,7 +227,7 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
       }
     }
 
-    this.framePlayingLock = false;
+    this.recordPainting = false;
 
     this.$emit('playing', frames[currentFrameIndex]);
 
