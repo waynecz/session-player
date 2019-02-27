@@ -1,37 +1,40 @@
-import React, { useEffect } from 'react';
-import Icon from '../Icon';
+import React from 'react';
 import { _warn } from 'tools/log';
+import IconButton, { IconButtonProps } from '@material-ui/core/IconButton';
+import Icon from '../Icon';
 import BEMProvider from 'tools/bem-classname';
 
-interface props {
+type props = {
   icon: string;
   text?: string;
   disabled?: boolean;
-  large?: boolean;
+  small?: boolean;
   onClick?: (evt: React.MouseEvent) => any;
-}
+} & IconButtonProps;
+
+const bem = BEMProvider('button');
 
 export default function Button({
   icon,
   text,
+  small,
   disabled = false,
   onClick,
-  large: $large
+  ...iconButtonProps
 }: props) {
-  if (!icon) _warn('Prop(icon) required!');
+  if (!icon) _warn('Prop icon required!');
 
-  const style = BEMProvider('button');
-
-  function clickhandler(evt: React.MouseEvent<HTMLElement>): any {
+  function clickHandler(evt: React.MouseEvent<HTMLElement>): any {
     if (disabled) return;
 
     onClick && onClick(evt);
   }
 
   return (
-    <div {...style({ disabled, $large })} onClick={clickhandler}>
-      <Icon name={icon} />
-      <span {...style('::text')}>{text}</span>
+    <div {...bem({ disabled })}>
+      <IconButton color="inherit" onClick={clickHandler} {...iconButtonProps}>
+        <Icon name={icon} large={!small} />
+      </IconButton>
     </div>
   );
 }

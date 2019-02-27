@@ -1,8 +1,8 @@
 {
   "name": "session-player",
-  "version": "0.0.1-alpha.0",
-  "description": "Consumer of ui-recorder",
-  "author": "Waynecz <451578533@qq.com>",
+  "version": "1.0.0",
+  "description": "Consumer of session-recorder",
+  "author": "waynecz <451578533@qq.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,20 +13,21 @@
   },
   "scripts": {
     "start": "npx webpack-dev-server --config build/dev.js",
-    "build": "rm -rf ./dist && npx webpack -p --config build/prod.js"
+    "build": "export NODE_ENV=production && npx webpack -p --config build/prod.js"
   },
   "browserslist": [
     "Chrome > 59"
   ],
   "dependencies": {
+    "@material-ui/core": "^3.9.2",
     "@types/node": "10.12.5",
-    "@types/react": "16.7.3",
-    "@types/react-dom": "16.0.9",
-    "@waynecz/ui-recorder": "0.0.1-alpha.17",
-    "classnames": "^2.2.6",
-    "react": "^16.7.0-alpha.0",
-    "react-dom": "^16.7.0-alpha.0",
-    "reworm": "^2.0.2"
+    "@types/react": "^16.8.4",
+    "@types/react-dom": "^16.8.2",
+    "hotkeys-js": "^3.4.4",
+    "mobx": "^5.9.0",
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0",
+    "session-recorder": "^1.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
@@ -37,18 +38,20 @@
     "copy-webpack-plugin": "^4.5.2",
     "css-loader": "^0.28.10",
     "extract-text-webpack-plugin": "^4.0.0-beta.0",
+    "fibers": "^3.1.1",
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^3.2.0",
-    "node-sass": "^4.10.0",
+    "mini-css-extract-plugin": "^0.5.0",
     "prettier": "^1.14.3",
     "react-hot-loader": "^4.3.12",
-    "sass-loader": "^6.0.6",
+    "sass": "^1.17.2",
+    "sass-loader": "^7.1.0",
     "style-loader": "^0.23.1",
     "tslint": "^5.11.0",
-    "tslint-config-prettier": "^1.15.0",
+    "tslint-config-prettier": "^1.17.0",
     "tslint-config-standard": "^8.0.1",
     "tslint-loader": "^3.6.0",
-    "tslint-plugin-prettier": "^2.0.0",
+    "tslint-plugin-prettier": "^2.0.1",
     "tslint-react": "^3.6.0",
     "typescript": "3.1.6",
     "uglifyjs-webpack-plugin": "^2.0.0",
@@ -57,7 +60,7 @@
     "webpack": "^4.19.0",
     "webpack-cli": "^3.1.0",
     "webpack-dev-middleware": "^3.4.0",
-    "webpack-dev-server": "^3.1.10",
+    "webpack-dev-server": "^3.1.14",
     "webpack-merge": "^4.1.4"
   }
 }

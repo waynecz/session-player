@@ -1,16 +1,23 @@
-import React from 'react';
+import React from 'react'
+import MuiIcon, { IconProps } from '@material-ui/core/Icon'
+import BEMProvider from 'tools/bem-classname'
 
-interface props {
+type props = {
   name: string
-}
+  large?: boolean
+} & IconProps
 
 const SEMANTIC_ICON_MAP = {
-  'next_step': 'redo',
-  'play': 'play_arrow',
+  next_step: 'redo',
+  play: 'play_arrow'
 }
 
-export default function Icon({ name }: props) {
+const bem = BEMProvider('icon')
+
+export default function Icon({ name, large = false, ...muiProps }: props) {
   return (
-    <i className="icon material-icons">{SEMANTIC_ICON_MAP[name] || name}</i>
-  );
+    <MuiIcon {...bem({ large })} {...muiProps}>
+      {SEMANTIC_ICON_MAP[name] || name}
+    </MuiIcon>
+  )
 }

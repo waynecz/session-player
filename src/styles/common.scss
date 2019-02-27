@@ -7,3 +7,9 @@
   display: flex;
   align-items: center;
 }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

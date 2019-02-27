@@ -1,18 +1,16 @@
-import { IPlayerClass, PlayerInitDTO } from 'schemas/player';
+import { Player, PlayerInitDTO } from 'schemas/player';
 import { _log, _warn, _error } from 'tools/log';
-import { _now } from 'tools/utils';
-import DocumentBufferer from './document';
+import { _now, _sleep } from 'tools/utils';
+import DomTreeBufferer from './dom-bufferer';
 import FrameWorker from './frame';
 import Painter from './painter';
 import ObserverPattern from './observer';
+import { myWindow } from 'schemas/override';
+import Store from 'stores';
 
-const trail: any[] = JSON.parse(window.localStorage.getItem('trail') || '[]');
-
-trail.unshift({ type: 'resize', w: 1440, h: 900, t: 140 });
-
-class PlayerClass extends ObserverPattern implements IPlayerClass {
+class PlayerClass extends ObserverPattern implements Player {
   // settings related
-  public interval = 60;
+  public INTERVAL = 60;
 
   // player status related
   public playing = false;
@@ -20,19 +18,19 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
   public over = false;
   public inited = false;
   public framesReady: boolean = false;
-  private recordPainting: boolean = false;
+  public initialDomReady: boolean = false;
+
+  public recordPainting: boolean = false;
 
   // timing related
   private currentFrameIndex: number = 0;
   private playTimerId: any;
   private lastPlayTime: number;
-  private lastPlayFrameTime: number;
+  private lastPlayFrameStartTime: number;
 
-  public play(): boolean {
+  public play = (): boolean => {
     if (!this.inited) {
-      _warn(
-        "Player hasn't been initiated or Document-bufferer initiate failed!"
-      );
+      _warn("Player hasn't been initiated or DOMTreeBufferer initiate failed!");
       return false;
     }
 
@@ -42,7 +40,9 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     }
 
     this.lastPlayTime = _now();
-    this.lastPlayFrameTime = FrameWorker.frames[this.currentFrameIndex].__st__!;
+    this.lastPlayFrameStartTime = FrameWorker.frames[
+      this.currentFrameIndex
+    ].__st__!;
 
     setImmediate(this.playFrame1by1);
     this.playing = true;
@@ -51,19 +51,26 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     return true;
   }
 
-  public pause() {
+  public fastForward = () => {
+    this.pause();
+
+    this.INTERVAL = 30;
+
+    setImmediate(this.play);
+  }
+
+  public pause = () => {
     clearTimeout(this.playTimerId);
     this.playing = false;
-    this.$emit('pause');
+    setImmediate(_ => this.$emit('pause'));
   }
 
   public async replay() {
     this.over = false;
-    await DocumentBufferer.reset();
-    Painter.clearMouseClick();
-    Painter.clearMouseMove();
+    await DomTreeBufferer.reload();
 
     this.currentFrameIndex = 0;
+    // in order to refresh player current time
     this.$emit('playing', FrameWorker.frames[0]);
     this.play();
   }
@@ -77,7 +84,9 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
 
     let playingStatusBeforeJump = this.playing;
 
-    if (playingStatusBeforeJump) this.pause();
+    if (playingStatusBeforeJump) {
+      this.pause();
+    }
 
     const { currentFrameIndex } = this;
 
@@ -86,29 +95,33 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     if (targetFrameIndex > currentFrameIndex) {
       try {
         this.quickPlayASliceOfFrames(currentFrameIndex, targetFrameIndex);
-      } catch (err) {}
+      } catch (err) {
+        _error('​catch -> err', err);
+      }
     }
 
     if (targetFrameIndex < currentFrameIndex) {
       try {
         await this.quickPlayFromTheBegining(targetFrameIndex);
-      } catch (err) {}
+      } catch (err) {
+        _error('​catch -> err', err);
+      }
     }
 
-    this.jumping = false;
-    // use setImmediate for trigging dom change
-    setTimeout(_ => this.$emit('jumpend'), 0);
-
     this.currentFrameIndex = targetFrameIndex + 1;
-    this.$emit('playing', FrameWorker.frames[targetFrameIndex]);
 
     playingStatusBeforeJump && this.play();
+
+    this.jumping = false;
+    // use setImmediate in order to trigger dom change
+    // and refresh player current time
+    setImmediate(_ =>
+      this.$emit('jumpend', FrameWorker.frames[targetFrameIndex])
+    );
   }
 
   private async quickPlayFromTheBegining(to: number): Promise<void> {
-    await DocumentBufferer.reset();
-    Painter.clearMouseClick();
-    Painter.clearMouseMove();
+    await DomTreeBufferer.reload();
 
     let quickPlayEndRecordIndex: number = 0;
 
@@ -123,14 +136,14 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
 
     if (quickPlayEndRecordIndex) {
       for (let i = 0; i <= quickPlayEndRecordIndex; i++) {
-        const record = trail[i];
+        const record = Store.recordList[i];
         Painter.paint(record);
       }
     }
   }
 
   /**
-   * play frames between specific two frame indexs
+   * play frames between two specified frame-index
    * @param from start frame index
    * @param to end frame index
    */
@@ -161,7 +174,7 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
         i <= quickPlayEndRecordIndex;
         i++
       ) {
-        const record = trail[i];
+        const record = Store.recordList[i];
         Painter.paint(record);
       }
     }
@@ -169,32 +182,46 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
 
   public async init({
     mouseLayer,
-    clickLayer,
+    screen,
     domLayer,
-    domSnapshot,
     canvas
   }: PlayerInitDTO): Promise<void> {
-    // Init Painter & DocumentBufferer ...
-    Painter.init(mouseLayer, clickLayer, canvas);
-    const status = await DocumentBufferer.init(domLayer, domSnapshot);
-
-    if (status) {
-      this.inited = true;
-    }
-
-    (window as any).Player = this;
-
+    myWindow.Player = this;
+    Painter.init(domLayer, mouseLayer, canvas, screen);
+    this.inited = true;
     this.$emit('init', this.inited);
   }
 
-  public load() {
-    FrameWorker.loadFrames(trail);
+  /**
+   * Load external data, make trail turn to frames,
+   * render initialPageSnapshot to real DOM
+   * @param trail
+   * @param initialPageSnapshot
+   * @param domLayer
+   */
+  public loadRecorderData({ recordList, initialPageSnapshot, referer }) {
+    if (!this.inited) {
+      return _warn('can not loadTheRecordData before Player inited!');
+    }
+
+    DomTreeBufferer.fillTheDomLayerBySnapshot(
+      Painter.domLayer,
+      initialPageSnapshot,
+      referer
+    ).then(_ => {
+      this.initialDomReady = true;
+      this.$emit('domready', this.framesReady);
+      this.play();
+    });
+
+    FrameWorker.loadFrames(recordList);
+
     this.framesReady = true;
-    this.$emit('framesreadychange', this.framesReady);
+    this.$emit('framesready', this.framesReady);
   }
 
   private playFrame1by1 = (): void => {
-    const { currentFrameIndex, interval, lastPlayTime } = this;
+    const { currentFrameIndex, INTERVAL, lastPlayTime } = this;
     const { frames } = FrameWorker;
 
     // last frame
@@ -220,10 +247,10 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
         // ------------------- begins --------------------------
         // ------------------- at ------------------------------
         // ------------------- here ----------------------------
-        const record = trail[i];
+        const record = Store.recordList[i];
         Painter.paint(record);
 
-        this.$emit('paint', record, frames[currentFrameIndex]);
+        this.$emit('paint', i);
       }
     }
 
@@ -232,10 +259,11 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
     this.$emit('playing', frames[currentFrameIndex]);
 
     /**
-     * Due to the setTimeout wouldn't excute in delayTime accurately,
+     * ⚠️ Due to the setTimeout wouldn't excute in delayTime accurately,
      * we should correct the offset as far as possible
-     **/
-    const theTimeShouldPassed = currentFrameEndTime! - this.lastPlayFrameTime;
+     */
+    const theTimeShouldPassed =
+      currentFrameEndTime! - this.lastPlayFrameStartTime;
     const theRealTimePassed = _now() - lastPlayTime;
     let correction = theRealTimePassed - theTimeShouldPassed;
 
@@ -245,10 +273,12 @@ class PlayerClass extends ObserverPattern implements IPlayerClass {
 
     // move to next frame
     this.currentFrameIndex += 1;
-    this.playTimerId = setTimeout(this.playFrame1by1, interval - correction);
+    this.playTimerId = setTimeout(this.playFrame1by1, INTERVAL - correction);
   };
 
-  private nextStep() {}
+  public nextStep() {
+    // TODO
+  }
 }
 
 const Player = new PlayerClass();

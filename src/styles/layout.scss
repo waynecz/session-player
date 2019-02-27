@@ -1,4 +1,11 @@
-body, html {
+* {
+  box-sizing: border-box;
+}
+
+body,
+html {
+  --icon-size: 30px;
+
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -7,3 +14,35 @@ body, html {
   font-family: 'Roboto', sans-serif;
 }
 
+::selection {
+  background-color: $primary;
+  color: $white;
+}
+
+p {
+  margin: 0;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+@include block(player) {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-areas:
+    'actions toolbar gap'
+    'actions screen gap'
+    'controller controller gap';
+  grid-template-columns: 330px 1fr 2.5%;
+  grid-template-rows: 120px 1fr 160px;
+  grid-column-gap: 10px;
+
+  @include element(gap) {
+    grid-area: gap;
+  }
+}

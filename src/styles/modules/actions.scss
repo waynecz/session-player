@@ -1,0 +1,189 @@
+@include block(actions) {
+  position: relative;
+  grid-area: actions;
+  overflow: hidden;
+  padding: 10px 0 0 10px;
+
+  @include element(container) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transition: 1s $perfect-timing;
+
+    &::before,
+    &::after {
+      content: '';
+      display: block;
+      width: 100%;
+      height: calc(50vh - 70px);
+    }
+
+    &::-webkit-scrollbar {
+      width: 0;
+    }
+  }
+
+  @include element(mask) {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    bottom: -80px;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      display: block;
+      width: 100%;
+      height: 30%;
+    }
+
+    &::before {
+      top: 0;
+      background-image: linear-gradient(to bottom, $dark, transparent);
+    }
+
+    &::after {
+      bottom: 0;
+      background-image: linear-gradient(to top, $dark, transparent);
+    }
+  }
+}
+
+@include block(record) {
+  position: relative;
+  display: grid;
+  align-items: center;
+  grid-template-areas: 'icon detail';
+  grid-template-columns: 30px 230px;
+  max-width: 100%;
+  grid-template-rows: 40px;
+  height: 40px;
+  border-radius: 4px;
+  padding-left: 20px;
+  padding-right: 30px;
+  margin: 10px 0;
+  color: rgba(230, 221, 255, 0.3);
+  cursor: pointer;
+
+  > .icon {
+    position: relative;
+    z-index: 1;
+    font-size: 22px;
+    grid-area: icon;
+    @include perfect-transition;
+  }
+
+  &::before {
+    content: '';
+    display: block;
+    left: 55px;
+    right: 30px;
+    top: 2px;
+    bottom: 2px;
+    border-radius: 3px;
+    position: absolute;
+    background-color: $inactive;
+    @include perfect-transition;
+  }
+
+  &:hover {
+    color: mix(#b8b0c9, transparent, 60);
+
+    &::before {
+      background-color: mix($active, transparent, 60);
+    }
+
+    @include element(time) {
+      opacity: 0.7;
+    }
+  }
+
+  @include when(active) {
+    color: rgba(230, 221, 255, 0.9);
+    grid-template-columns: 30px 260px;
+
+    &::before {
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background-color: $active;
+    }
+
+    @include element(time) {
+      opacity: 1;
+    }
+  }
+
+  @include element(detail) {
+    position: relative;
+    display: flex;
+    align-items: center;
+    grid-area: detail;
+    z-index: 1;
+    height: 100%;
+    padding-left: 15px;
+    padding-right: 10px;
+  }
+
+  @include element(primary) {
+    font-size: 13px;
+    font-weight: 500;
+    padding-right: 10px;
+    line-height: 1;
+    white-space: nowrap;
+    @include perfect-transition;
+  }
+
+  @include element(secondary) {
+    font-size: 10px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    @include perfect-transition;
+  }
+
+  @include element(tootip) {
+    font-family: 'Roboto', serif;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  @include element(time) {
+    position: absolute;
+    font-size: 12px;
+    transform-origin: 100% 50%;
+    transform: scale(0.7);
+    font-weight: lighter;
+    right: -5px;
+    top: 2px;
+    opacity: 0.4;
+    @include perfect-transition;
+  }
+
+  @include element(res) {
+    max-width: 60vw;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 10;
+    -webkit-box-orient: vertical;
+  }
+
+  @include when(error) {
+    &:hover::before {
+      background-color: rgba(146, 23, 142, 0.575);
+    }
+
+    @include when(active) {
+      &::before {
+        background-color: rgba(255, 37, 182, 0.801);
+      }
+    }
+  }
+}

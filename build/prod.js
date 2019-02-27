@@ -1,11 +1,15 @@
 const merge = require('webpack-merge')
-const baseWebpackConfig = require('./webpack.base')
+const baseWebpackConfig = require('./base')
 const webpack = require('webpack')
 
 const productionConfig = merge(baseWebpackConfig, {
   mode: 'production',
 
-  entry: './index.ts',
+  entry: './index.tsx',
+
+  output: {
+    filename: '[name].[contenthash:6].js'
+  },  
 
   plugins: [
     new webpack.DefinePlugin({
@@ -17,3 +21,7 @@ const productionConfig = merge(baseWebpackConfig, {
 })
 
 module.exports = productionConfig
+
+
+
+

@@ -1,9 +1,0 @@
-@include block(record) {
-  height: 40px;
-  background: $skeleton;
-  border-radius: 4px;
-
-  @include when(active) {
-    background: $active;
-  }
-}

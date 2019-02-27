@@ -1,0 +1,14 @@
+@include block(message) {
+  > div {
+    background-color: $active;
+  }
+
+  @include element(content) {
+    display: flex;
+    align-items: center;
+  }
+
+  @include element(text) {
+    margin-left: 5px;
+  }
+}

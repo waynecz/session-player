@@ -8,7 +8,7 @@
         "loose": true,
         "useBuiltIns": "entry",
         "targets": {
-          "browsers": ["Chrome >= 59"]
+          "browsers": ["Chrome >= 60"]
         }
       }
     ]

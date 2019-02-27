@@ -1,0 +1,7 @@
+@include block(tooltip) {
+}
+
+[role^='tooltip'] > div {
+  max-width: calc(100vw - 400px);
+  background-color: rgb(9, 0, 34);
+}

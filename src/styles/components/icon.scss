@@ -2,4 +2,8 @@
   font-size: var(--icon-size);
   color: inherit;
   user-select: none;
+
+  @include when(large) {
+    font-size: 40px;
+  }
 }

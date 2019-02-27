@@ -1,15 +1,14 @@
-import { ID_KEY } from '@waynecz/ui-recorder/dist/constants';
+import { RECORDER_ID } from 'session-recorder/dist/constants';
 
-import { DOMMutationRecord } from '@waynecz/ui-recorder/dist/models/observers/mutation';
+import {
+  DOMMutationRecord,
+  EventReocrd,
+  MouseReocrd
+} from 'session-recorder/dist/models/observers';
 import { ElementX } from 'schemas/override';
 import { _log, _warn, _error } from 'tools/log';
 import { _now, _safeDivision, _throttle } from 'tools/utils';
-import DocumentBufferer from './document';
-
-import {
-  EventReocrd,
-  MouseReocrd
-} from '@waynecz/ui-recorder/dist/models/observers/event';
+import DocumentBufferer from './dom-bufferer';
 
 let { getElementByRecordId, bufferNewElement } = DocumentBufferer;
 getElementByRecordId = getElementByRecordId.bind(DocumentBufferer);
@@ -19,20 +18,22 @@ declare var ResizeObserver;
 
 class PainterClass {
   /**
-   * Note:
+   * ⚠️ Note:
    * screen includes canvas
    * canvas is composited with mouseLayer + clickLayer + domLayer
    */
-  private screen: HTMLElement;
-  private mouseLayer: HTMLCanvasElement;
-  private clickLayer: HTMLElement;
-  private canvas: HTMLElement;
+  public screen: HTMLElement;
+  public mouseLayer: HTMLElement;
+  public mouse: HTMLElement;
+  public click: HTMLElement;
+  public domLayer: HTMLIFrameElement;
+  public canvas: HTMLElement;
 
-  private canvasWidth: number;
-  private canvasHeight: number;
-  private lastMousePos = { x: 0, y: 0 };
+  public canvasWidth: number;
+  public canvasHeight: number;
+  public lastMousePos = { x: 0, y: 0 };
 
-  private recordType2Action = {
+  public recordType2Action = {
     move: this.paintMouseMove,
     click: this.paintMouseClick,
     attr: this.paintAttributeMutate,
@@ -41,6 +42,7 @@ class PainterClass {
     form: this.paintFormChange,
     resize: this.paintResize,
     scroll: this.paintScroll,
+    // tslint:disable-next-line
     default: () => {}
   };
 
@@ -54,11 +56,13 @@ class PainterClass {
     tbody: 'table'
   };
 
-  public init(mouseLayer, clickLayer, canvas) {
+  public init(domLayer, mouseLayer, canvas, screen) {
+    this.domLayer = domLayer;
     this.mouseLayer = mouseLayer;
-    this.clickLayer = clickLayer;
+    this.mouse = document.getElementById('mouse')!;
+    this.click = document.getElementById('click')!;
     this.canvas = canvas;
-    this.screen = canvas.parentElement;
+    this.screen = screen;
 
     const repositionCanvas = _throttle(this.repositionCanvas, 200).bind(this);
     const resizeObserver = new ResizeObserver(entries => {
@@ -91,7 +95,7 @@ class PainterClass {
   }
 
   private html2ElementorText(html: string): ElementX {
-    // list tags below need specific wapper Tag, ensuring not lost original dom structure
+    // list tags below need specific wapper Tag, ensuring not to lost original dom structure
     const matchRst = /^<(tr|td|th|col|colgroup|thead|tbody)[\s\S]*>[\w\W]*?<\/(tr|td|th|col|colgroup|thead|tbody)>$/g.exec(
       html
     );
@@ -107,64 +111,54 @@ class PainterClass {
   }
 
   private paintMouseMove(record: MouseReocrd): void {
-    const mouseCtx = this.mouseLayer.getContext('2d');
-    const { x: lastX, y: lastY } = this.lastMousePos;
     const { x, y } = record;
-
-    if (mouseCtx && x && y) {
-      mouseCtx.strokeStyle = 'rgba(239, 35, 35, 0.6)';
-      mouseCtx.lineWidth = 2;
-      mouseCtx.beginPath();
-      mouseCtx.moveTo(lastX || x - 1, lastY || y - 1);
-      mouseCtx.lineTo(x, y);
-      mouseCtx.closePath();
-      mouseCtx.stroke();
-      this.lastMousePos = { x, y };
-    }
-  }
-
-  public clearMouseMove(): void {
-    const mouseCtx = this.mouseLayer.getContext('2d');
-    if (mouseCtx) {
-      mouseCtx.clearRect(0, 0, this.mouseLayer.width, this.mouseLayer.height);
-    }
+    const position = `translate(${x}px, ${y}px)`
+		this.mouse.style.transform = position
   }
 
   private paintMouseClick(record: MouseReocrd): void {
-    const { x, y } = record;
-    const dot = document.createElement('div');
-    dot.className = 'screen_click-dot';
-    dot.style.top = y + 'px';
-    dot.style.left = x + 'px';
-    this.clickLayer.append(dot);
-    // after dot dom appended
-    setTimeout(() => {
-      dot.classList.add('fading');
-    }, 10);
-  }
+    const { x, y } = record
+    const dot = document.createElement('div')
+    dot.className = 'screen_click'
+    dot.style.left = x + 'px'
+    dot.style.top = y + 'px'
+    this.mouseLayer.append(dot)
 
-  public clearMouseClick(): void {
-    this.clickLayer.innerHTML = '';
+    setTimeout(() => {
+      dot.classList.add('is-active')
+    }, 10)
   }
 
   private paintNodeAddorRemove(record: DOMMutationRecord): void {
-    const { add, remove, target } = record;
-    if (target === 164) {
-      debugger;
-    }
+    const { add, remove, target, prev, next } = record;
+
     const parentEle = getElementByRecordId(target);
 
     if (parentEle) {
       if (add && add.length) {
-        add.forEach(({ html, index }) => {
+        add.forEach(({ html, index, type }) => {
           if (!html) return;
 
+          const eleToInsert = this.html2ElementorText(html);
+
+          const eleRecordId =
+            eleToInsert.getAttribute && eleToInsert.getAttribute(RECORDER_ID);
+
+          // 2. element may already existed in parentEle
+          if (parentEle.querySelector(`[${RECORDER_ID}="${eleRecordId}"]`)) {
+            return;
+          }
+
           if (index || index === 0) {
-            const eleToInsert = this.html2ElementorText(html);
-            const thisRecordId =
-              eleToInsert.getAttribute && eleToInsert.getAttribute(ID_KEY);
-            // element may already existed in parentEle
-            if (parentEle.querySelector(`[${ID_KEY}="${thisRecordId}"]`)) {
+            // 1. css insert
+            if (parentEle.nodeName === 'STYLE') {
+              parentEle.innerHTML = html;
+              return;
+            }
+
+            // 3. the textContent does not change but you may receive an text node change
+            // which text is entirely equal as before
+            if (type === 'text' && html === parentEle.textContent) {
               return;
             }
             // https://mdn.io/insertBefore
@@ -172,33 +166,77 @@ class PainterClass {
 
             bufferNewElement(eleToInsert);
           } else {
-            // if index === undefined, html should be a textNode
-            // Q: why not appendChild()
-            // A: append() can accept a DOMString
-            // more: https://mdn.io/append
-            parentEle.append(html);
+            if (type === 'text') {
+              // html should be a textNode's textContent
+              // more: https://mdn.io/append
+              parentEle.append(html);
+            } else {
+              parentEle.appendChild(eleToInsert);
+            }
           }
         });
       }
 
       if (remove && remove.length) {
-        remove.forEach(({ target, remaining, index, type }) => {
+        remove.forEach(({ target, textContent, index, type }) => {
           // remove an element
           if (target && type === 'ele') {
-            const eleToRemove = getElementByRecordId(target);
+            try {
+              const eleToRemove = getElementByRecordId(target);
 
-            eleToRemove && parentEle.removeChild(eleToRemove);
+              eleToRemove && parentEle.removeChild(eleToRemove);
+            } catch (err) {
+              console.warn('Remove ele Error: ', record);
+            }
             return;
           }
 
           // remove an textNode with specific index
           if (index && type === 'text') {
-            parentEle.removeChild(parentEle.childNodes[index]);
+            try {
+              const eleToRemove = parentEle.childNodes[index];
+
+              eleToRemove && parentEle.removeChild(eleToRemove);
+            } catch (err) {
+              console.warn('Remove text Error: ', record);
+            }
+
+            return;
           }
 
-          // remove a textNode in a contenteditable element
-          if (remaining && type === 'text') {
-            parentEle.innerHTML = remaining;
+          // remove a textNode
+          // textContent equal to " "  in most case :)
+          if (textContent && type === 'text') {
+            let prevEle;
+            let nextEle;
+
+            if (prev) {
+              prevEle = getElementByRecordId(prev);
+            }
+
+            if (next) {
+              prevEle = getElementByRecordId(next);
+            }
+
+            const textNodeToRemove = Array.from(parentEle.childNodes).find(
+              node => {
+                const isText = node.nodeName === '#text';
+                const isContentMatched = node.textContent === textContent;
+                const isPrevMatched = prevEle
+                  ? node.previousSibling === prevEle
+                  : true;
+
+                const isNextMatched = nextEle
+                  ? node.nextSibling === nextEle
+                  : true;
+
+                return (
+                  isText && isContentMatched && isPrevMatched && isNextMatched
+                );
+              }
+            );
+
+            textNodeToRemove && parentEle.removeChild(textNodeToRemove);
           }
         });
       }
@@ -210,6 +248,10 @@ class PainterClass {
     const targetEle = getElementByRecordId(target);
 
     if (targetEle && attr) {
+      // DO NOT TOUCH RECORDER-ID！
+      if (attr.k === RECORDER_ID) {
+        return;
+      }
       targetEle.setAttribute(attr.k, attr.v);
     }
   }
@@ -252,10 +294,19 @@ class PainterClass {
 
   private paintScroll(record: EventReocrd): void {
     const { x, y, target } = record;
-    const targetEle = target && getElementByRecordId(target);
-    if (targetEle) {
-      targetEle.scrollTop = y!;
-      targetEle.scrollLeft = x!;
+
+    if (target) {
+      const targetEle = target && getElementByRecordId(target);
+      if (targetEle) {
+        targetEle.scrollTop = y!;
+        targetEle.scrollLeft = x!;
+      }
+    } else {
+      const targetDocument = this.domLayer.contentDocument;
+      if (targetDocument) {
+        targetDocument.documentElement!.scrollLeft = x!;
+        targetDocument.documentElement!.scrollTop = y!;
+      }
     }
   }
 
@@ -271,9 +322,6 @@ class PainterClass {
           offsetHeight: screenHeight,
           offsetWidth: screenWidth
         } = this.screen;
-
-        this.mouseLayer.width = canvasWidth;
-        this.mouseLayer.height = canvasHeight;
 
         const widthScale = _safeDivision(screenWidth, canvasWidth);
         const heightScale = _safeDivision(screenHeight, canvasHeight);

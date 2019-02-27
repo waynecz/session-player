@@ -5,7 +5,7 @@
   @include perfect-transition;
 
   + .button {
-    margin-left: 20px;
+    margin-left: 5px;
   }
 
   @include when(disabled) {

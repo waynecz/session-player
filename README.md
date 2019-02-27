@@ -1,5 +1,8 @@
-# Session Layout
+# 🚧 Session Player
 
-> A consumer of [UI-Recorder](https://github.com/waynecz/ui-recorder)
+Player requires [Recoder's] data!
 
-still developing...
+```bash
+# run on 8080
+npm start
+```

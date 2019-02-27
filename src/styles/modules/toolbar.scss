@@ -7,6 +7,9 @@
     font-size: 50px;
     font-weight: 400;
     text-indent: 10px;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   @include element(actions) {

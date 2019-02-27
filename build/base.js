@@ -1,11 +1,17 @@
 const path = require('path')
-const { CheckerPlugin, TsConfigPathsPlugin } = require('awesome-typescript-loader')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const {
+  CheckerPlugin,
+  TsConfigPathsPlugin
+} = require('awesome-typescript-loader')
+
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 function resolve(dir) {
   return path.join(__dirname, '..', dir)
 }
+
+const isProduction = process.env.NODE_ENV === 'production'
 
 module.exports = {
   context: resolve('src'),
@@ -28,7 +34,19 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        use: ['style-loader', 'css-loader', 'sass-loader']
+        use: [
+          {
+            loader: isProduction ? MiniCssExtractPlugin.loader : 'style-loader'
+          },
+          { loader: 'css-loader' },
+          {
+            loader: 'sass-loader',
+            options: {
+              implementation: require('sass'),
+              fiber: require('fibers')
+            }
+          }
+        ]
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
@@ -42,6 +60,12 @@ module.exports = {
   },
   plugins: [
     new CheckerPlugin(),
+
+    new MiniCssExtractPlugin({
+      // only work in production mode
+      filename: '[name].[contenthash:6].css',
+      chunkFilename: '[id].css'
+    }),
 
     new HtmlWebpackPlugin({
       template: resolve('public/index.html'),

@@ -3,7 +3,50 @@
   grid-area: screen;
   display: flex;
   background: #0c0029;
-  
+
+  @include element(spinner) {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    display: flex;
+
+    &::after {
+      content: '';
+      display: block;
+      @include circle(60px);
+      border: 7px solid $active;
+      border-right-color: transparent;
+      margin: auto;
+      will-change: transform;
+      animation: spin 1s ease-out infinite;
+    }
+
+    @include when(hidden) {
+      display: none;
+    }
+  }
+
+  @include element(error) {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    display: none;
+
+    > .icon {
+      margin: auto;
+      color: $active;
+      font-size: 60px;
+    }
+
+    @include when(visible) {
+      display: flex;
+    }
+  }
+
   @include element(canvas) {
     position: absolute;
     top: 50%;
@@ -15,37 +58,58 @@
     transform: translate(-50%, -50%);
     contain: strict;
     opacity: 0;
-    transition: .2s $perfect-timing opacity;
+    transition: 0.2s $perfect-timing opacity;
     counter-reset: click;
 
     > .fill {
       position: absolute;
       contain: strict;
     }
+  }
 
-    > #mouseLayer {
-      visibility: hidden;
+  @include element(mouse) {
+    display: none;
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 80px;
+    background-image: url('../assets/mouse.svg');
+    background-size: 100% auto;
+    background-repeat: no-repeat;
+    background-position: -6px -4px;
+    contain: strict;
+    will-change: transform;
+    transition: 0.05s linear;
+    overflow: visible;
+
+    @include when(visible) {
+      display: block;
     }
   }
 
-  @include element('click-dot') {
+  @include element(click) {
     position: absolute;
-    display: flex;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    background: rgb(108, 55, 255);
-    counter-increment: click;
-    transition: 13s cubic-bezier(1,.2,1,.57);
+    top: 0;
+    left: 0;
+    transform: txy(-50%, -50%);
+    @include circle(10px, rgba(68, 0, 255, 0.35));
+    border: 10px solid rgba(68, 0, 255, 0.8);
+    box-sizing: content-box;
+    transition: 1s cubic-bezier(0.04, 0.72, 0.23, 1.02);
 
-    &::after {
-      content: counter(click);
-      font-size: 12px;
-      font-weight: 100;
-      margin: auto;
+    @include when(active) {
+      width: 70px;
+      height: 70px;
+      border-width: 1px;
+      opacity: 0;
     }
 
-    &.fading {
+    &:hover {
+      width: 80px;
+      height: 80px;
+      border-width: 1px;
       opacity: 0;
     }
   }

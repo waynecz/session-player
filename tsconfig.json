@@ -19,16 +19,8 @@
     "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "typeRoots": ["node_modules/@wayne/ui-recorder/dist/models", "node_modules/@types"],
+    "typeRoots": ["node_modules/session-recorder/dist/models", "node_modules/@types"],
     "experimentalDecorators": true
   },
-  "exclude": [
-    "node_modules",
-    "build",
-    "scripts",
-    "acceptance-tests",
-    "webpack",
-    "jest",
-    "src/setupTests.ts"
-  ]
+  "exclude": ["node_modules", "build"]
 }

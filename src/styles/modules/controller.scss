@@ -7,7 +7,7 @@
 
   @include element(progress) {
     --percent: 0%;
-    --trasnsition: transform, left 1s linear;
+    --trasnsition: 0.2s linear;
 
     position: relative;
     flex-grow: 1;
@@ -16,9 +16,10 @@
     background: $disabled;
     background-clip: content-box;
     cursor: pointer;
+    box-sizing: content-box;
 
     &::before {
-      content: "";
+      content: '';
       position: absolute;
       width: 100%;
       height: $progress-height;
@@ -29,7 +30,7 @@
     }
 
     @include when(jumping) {
-      --trasnsition: none;
+      transition-duration: 0;
       pointer-events: none;
     }
   }
@@ -38,11 +39,10 @@
     $color: mix($primary, #fff, 90);
 
     position: absolute;
-    content: "";
     top: 8px;
+    @include circle(21px, $color);
     will-change: left;
     left: calc(var(--percent) - 10px);
-    @include circle(19px, $color);
     box-shadow: 0 0 10px mix($color, #333, 50);
     transition: var(--trasnsition);
     cursor: pointer;
@@ -67,7 +67,7 @@
       display: block;
       width: 7px;
       height: 8px;
-      background-image: url("../assets/triangle.svg");
+      background-image: url('../assets/triangle.svg');
       left: -3.5px;
     }
 

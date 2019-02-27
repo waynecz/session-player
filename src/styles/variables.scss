@@ -1,8 +1,9 @@
-$element-separator: '_' !global;
+$element-separator: '_';
 
-$primary: #651BFF!global;
-$active: #40247A!global;
-$dark: #05000F!global;
+$primary: #651bff;
+$active: #40247a;
+$inactive: rgba(76, 17, 185, 0.27);
+$dark: #05000f;
 $disabled: #322944;
 $skeleton: #0a0121;
 $white: #e7dff9;

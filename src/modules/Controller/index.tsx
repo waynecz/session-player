@@ -1,78 +1,67 @@
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import BEMProvider from 'tools/bem-classname';
 import Button from 'components/Button';
+import Player from 'player';
+
 import {
   usePlayerDuration,
   usePlayerCurrentTime,
   usePlayerStatus
 } from 'player/hooks';
 import { _ms2Duration } from 'tools/utils';
-import Player from 'player';
+
+const bem = BEMProvider('controller');
 
 export default function Controller() {
-  const style = BEMProvider('controller');
-
   const { duration } = usePlayerDuration();
-  const { currentTime } = usePlayerCurrentTime();
-  const { inited, playing, framesReady, over, jumping } = usePlayerStatus();
+  const currentTime = usePlayerCurrentTime();
+  const {
+    inited,
+    playing,
+    framesReady,
+    initialDomReady,
+    over,
+    jumping
+  } = usePlayerStatus();
+
+  const hanldeNormalSpeedClick = () => {
+    over ? Player.replay() : playing ? Player.pause() : Player.play();
+  };
+
+  const allowInteractive = inited && framesReady && initialDomReady;
 
   const timeIndicator = `${_ms2Duration(currentTime)} / ${_ms2Duration(
     duration
   )}`;
 
-  let [rulerPosition, setRulerPosition] = useState('0px');
+  let percent = Math.floor((currentTime * 100) / (duration || 1));
 
-  const percent = Math.ceil((currentTime * 100) / (duration || 1));
-
-  const allowInteractive = inited && framesReady;
+  if (percent > 100) percent = 100;
 
   return (
-    <section {...style('$B lr-center')}>
+    <section {...bem('$B lr-center')}>
       <div
-        {...style('::progress', { jumping })}
+        {...bem('::progress', { jumping })}
         style={{ '--percent': `${percent}%` } as any}
         onClick={handleJump}
-        // onMouseMove={evt => handleRulerMove(evt, setRulerPosition)}
       >
-        <div {...style('::button')} />
-
-        <div
-          {...style('::ruler')}
-          style={{ transform: `translateX(${rulerPosition})` }}
-        />
+        <div {...bem('::button')} />
       </div>
 
-      <p {...style('::time')}>{timeIndicator}</p>
+      <p {...bem('::time')}>{timeIndicator}</p>
 
-      <div {...style('::actions lr-center')}>
-        {over ? (
-          <Button
-            icon="replay"
-            disabled={!allowInteractive}
-            onClick={_ => Player.replay()}
-            large={true}
-          />
-        ) : playing ? (
-          <Button
-            icon="pause"
-            disabled={!allowInteractive}
-            onClick={_ => Player.pause()}
-            large={true}
-          />
-        ) : (
-          <Button
-            icon="play"
-            disabled={!allowInteractive}
-            onClick={_ => Player.play()}
-            large={true}
-          />
-        )}
-
+      <div {...bem('::actions lr-center')}>
         <Button
-          icon="next_step"
-          disabled={playing || !allowInteractive || over}
-          large={true}
+          icon={over ? 'replay' : playing ? 'pause' : 'play'}
+          disabled={!allowInteractive}
+          onClick={hanldeNormalSpeedClick}
         />
+
+        {/* <Button
+          icon="fast_forward"
+          disabled={playing || !allowInteractive || over}
+          onClick={_ => Player.fastForward()}
+        /> */}
       </div>
     </section>
   );
@@ -84,10 +73,4 @@ async function handleJump(evt) {
   const percent = pageX / (target as HTMLDivElement).offsetWidth;
 
   await Player.jump(percent);
-}
-
-function handleRulerMove(evt, setRulerPosition) {
-  const { pageX } = evt as MouseEvent;
-
-  setRulerPosition(`${pageX}px`);
 }

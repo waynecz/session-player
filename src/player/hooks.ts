@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import FrameWorker, { Frame } from './frame';
 import Player from 'player';
 import { _throttle } from 'tools/utils';
@@ -6,24 +6,29 @@ import { _throttle } from 'tools/utils';
 let setStatus: any;
 
 function playerStatusHandler(): void {
-  const { inited, playing, framesReady, over, jumping } = Player;
+  const {
+    inited,
+    playing,
+    framesReady,
+    initialDomReady,
+    over,
+    jumping
+  } = Player;
   setStatus &&
     setStatus({
       jumping,
       over,
       inited,
       playing,
+      initialDomReady,
       framesReady
     });
 }
 
-Player.$on('init', playerStatusHandler);
-Player.$on('jumpstart', playerStatusHandler);
-Player.$on('jumpend', playerStatusHandler);
-Player.$on('framesreadychange', playerStatusHandler);
-Player.$on('pause', playerStatusHandler);
-Player.$on('play', playerStatusHandler);
-Player.$on('over', playerStatusHandler);
+Player.$on(
+  'init jumpstart jumpend framesready domready pause play over',
+  playerStatusHandler
+);
 
 export function usePlayerStatus(): {
   inited: boolean;
@@ -31,58 +36,82 @@ export function usePlayerStatus(): {
   jumping: boolean;
   over: boolean;
   framesReady: boolean;
+  initialDomReady: boolean;
 } {
   const [status, setValue] = useState({
     jumping: false,
     inited: false,
     playing: false,
     over: false,
-    framesReady: false
+    framesReady: false,
+    initialDomReady: false
   });
   setStatus = setValue;
   return status;
 }
 
 // --------------------------- usePlayerDuration --------------------------
-let setDuration: any;
-
-FrameWorker.$on(
-  'load',
-  (duration: number): void => {
+const refreshDuration = (setDuration: any) => {
+  return function(duration: number): void {
     setDuration && setDuration(duration);
-  }
-);
+  };
+};
 
 export function usePlayerDuration(): { duration: number } {
   const [duration, setTime] = useState(0);
 
-  setDuration = setTime;
+  const callback = useCallback(refreshDuration(setTime), [null]);
+
+  useEffect(
+    () => {
+      FrameWorker.$on('load', callback);
+    },
+    [null]
+  );
 
   return {
-    duration
+    duration: Player.framesReady ? duration : FrameWorker.duration
   };
 }
 
 // --------------------------- usePlayerCurrentTime --------------------------
-let setCurrentTime: any;
-
-// TODO: 修复最开始播放的几秒快速跳过的状况
-Player.$on(
-  'playing',
-  _throttle((frame: Frame): void => {
+function refreshCurrentTime(setCurrentTime: any): any {
+  return function(frame: Frame) {
     const { __ed__ } = frame;
 
-    const currentTime = __ed__! + Player.interval - FrameWorker.firstFrameTime;
+    const currentTime = __ed__! + Player.INTERVAL - FrameWorker.firstFrameTime;
 
     setCurrentTime && setCurrentTime(currentTime);
-  }, 1000)
-);
-
-export function usePlayerCurrentTime(): { currentTime: number } {
-  const [currentTime, setTime] = useState(0);
-  setCurrentTime = setTime;
-
-  return {
-    currentTime
   };
+}
+
+export function usePlayerCurrentTime(): number {
+  const [currentTime, setTime] = useState(0);
+
+  const callback = useCallback(refreshCurrentTime(setTime), [null]);
+
+  useEffect(
+    () => {
+      Player.$on('jumpend', callback);
+      Player.$on('playing', _throttle(callback, 100));
+    },
+    [null]
+  );
+
+  return currentTime;
+}
+
+// --------------------------- useCurrentReocrdIndex --------------------------
+let setIndex: any;
+
+Player.$on('paint', recordIndex => {
+  setIndex && setIndex(recordIndex);
+});
+
+export function useCurrentRecordIndex() {
+  const [index, setValue] = useState(0);
+
+  setIndex = _throttle(setValue, 300);
+
+  return index;
 }

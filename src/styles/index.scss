@@ -1,15 +1,15 @@
 @import '~watson-scss';
 
-@import "variables";
-@import "root";
-@import "common";
-@import "player";
+@import 'variables';
+@import 'layout';
+@import 'common';
 
-@import "components/icon";
-@import "components/button";
-@import "components/record";
+@import 'components/icon';
+@import 'components/button';
+@import 'components/tooltip';
+@import 'components/message';
 
-@import "modules/controller";
-@import "modules/record-list";
-@import "modules/toolbar";
-@import "modules/screen";
+@import 'modules/controller';
+@import 'modules/actions';
+@import 'modules/toolbar';
+@import 'modules/screen';

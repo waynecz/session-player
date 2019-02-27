@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Button from 'components/Button';
+import Tooltip from 'components/Tooltip';
 import BEMProvider from 'tools/bem-classname';
 
-export default function Toolbar() {
-  const style = BEMProvider('toolbar');
+const bem = BEMProvider('toolbar');
 
+export default function Toolbar() {
   return (
-    <div {...style()}>
-      <h1 {...style('::heading')}>Screen</h1>
-      <div {...style('::actions lr-center')}>
-        <Button icon="person" />
-        <Button icon="settings" />
+    <div {...bem()}>
+      <h1 {...bem('::heading')}>Screen</h1>
+      <div {...bem('::actions lr-center')}>
+        <Tooltip title="快捷键，目前只有「空格键」能控制播放/暂停">
+          <Button small={true} icon="keyboard" />
+        </Tooltip>
+        <Tooltip title="用户信息">
+          <Button small={true} disabled={true} icon="person" />
+        </Tooltip>
+        <Tooltip title="播放器设置">
+          <Button small={true} disabled={true} icon="settings" />
+        </Tooltip>
       </div>
     </div>
   );
