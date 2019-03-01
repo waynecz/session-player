@@ -3,33 +3,6 @@ import FrameWorker, { Frame } from './frame';
 import Player from 'player';
 import { _throttle } from 'tools/utils';
 
-let setStatus: any;
-
-function playerStatusHandler(): void {
-  const {
-    inited,
-    playing,
-    framesReady,
-    initialDomReady,
-    over,
-    jumping
-  } = Player;
-  setStatus &&
-    setStatus({
-      jumping,
-      over,
-      inited,
-      playing,
-      initialDomReady,
-      framesReady
-    });
-}
-
-Player.$on(
-  'init jumpstart jumpend framesready domready pause play over',
-  playerStatusHandler
-);
-
 export function usePlayerStatus(): {
   inited: boolean;
   playing: boolean;
@@ -46,7 +19,33 @@ export function usePlayerStatus(): {
     framesReady: false,
     initialDomReady: false
   });
-  setStatus = setValue;
+
+  const playerStatusHandler = useCallback(() => {
+    const {
+      inited,
+      playing,
+      framesReady,
+      initialDomReady,
+      over,
+      jumping
+    } = Player;
+    setValue({
+      jumping,
+      over,
+      inited,
+      playing,
+      initialDomReady,
+      framesReady
+    });
+  }, [null]);
+
+  useEffect(() => {
+    Player.$on(
+      'init jumpstart jumpend framesready domready pause play over',
+      playerStatusHandler
+    );
+  }, []);
+
   return status;
 }
 

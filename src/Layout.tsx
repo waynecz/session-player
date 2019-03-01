@@ -10,12 +10,18 @@ import { hot, setConfig } from 'react-hot-loader';
 import { getRecorderData } from 'services/localStorage';
 import Player from 'player';
 import addHotKeys from 'player/hotkeys';
+import { useStore } from 'stores';
+import BEMProvider from 'tools/bem-classname';
 
 setConfig({ pureSFC: true } as any);
+
+const bem = BEMProvider('player');
 
 function Layout() {
   const [message, setMessage] = useState('');
   const [messageVisible, setVisible] = useState(false);
+
+  const fullScreen = useStore<boolean>('fullScreen');
 
   useEffect(
     () => {
@@ -33,7 +39,7 @@ function Layout() {
   );
 
   return (
-    <section className="player">
+    <section {...bem({ full: fullScreen })}>
       <Message
         handleClose={() => {
           setVisible(false);
@@ -45,7 +51,7 @@ function Layout() {
       <Toolbar />
       <Screen />
       <Controller />
-      <div className="player_gap" />
+      <div {...bem('::gap')} />
     </section>
   );
 }

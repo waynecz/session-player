@@ -1,9 +1,17 @@
 @include block(controller) {
+  position: relative;
+  z-index: 2;
   $progress-height: 5px;
-
+  overflow: hidden;
   grid-area: controller;
   display: flex;
   align-items: center;
+
+  @include when(full) {
+    @include element(time) {
+      color: $dark;
+    }
+  }
 
   @include element(progress) {
     --percent: 0%;
@@ -13,25 +21,37 @@
     flex-grow: 1;
     padding: 15px 0;
     height: $progress-height;
-    background: $disabled;
+    background: $dark;
     background-clip: content-box;
     cursor: pointer;
     box-sizing: content-box;
 
     &::before {
+      // 高亮色进度条
       content: '';
       position: absolute;
       width: 100%;
       height: $progress-height;
-      background: mix($primary, #333, 80);
+      background-color: mix($primary, #333, 80);
       transform: tx(calc(var(--percent) - 100%));
       transition: var(--trasnsition);
       contain: style;
     }
 
     @include when(jumping) {
-      transition-duration: 0;
+      transition: none;
       pointer-events: none;
+
+      &::before {
+        transition: 0s linear;
+        background-color: $dark;
+      }
+
+      @include element(button) {
+        transition: 0s linear;
+        background-color: $dark;
+        box-shadow: none;
+      }
     }
   }
 
@@ -90,7 +110,7 @@
   }
 
   @include element(actions) {
-    margin-left: 4%;
+    margin-left: 2%;
     margin-right: 0.5%;
     flex-grow: 0;
   }

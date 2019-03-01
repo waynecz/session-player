@@ -9,7 +9,7 @@ html {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: $dark;
+  background: $black;
   color: white;
   font-family: 'Roboto', sans-serif;
 }
@@ -44,5 +44,13 @@ p {
 
   @include element(gap) {
     grid-area: gap;
+  }
+
+
+  @include when(full) {
+    grid-template-areas:
+    'actions toolbar gap'
+    'actions screen gap'
+    'actions controller gap';
   }
 }

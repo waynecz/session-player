@@ -1,6 +1,6 @@
 @include block(message) {
   > div {
-    background-color: $active;
+    background-color: $secondary;
   }
 
   @include element(content) {

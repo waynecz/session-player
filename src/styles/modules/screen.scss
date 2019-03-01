@@ -3,6 +3,21 @@
   grid-area: screen;
   display: flex;
   background: #0c0029;
+  filter: blur(0px);
+  transition: 1s $perfect-timing;
+
+  @include when(blur) {
+    filter: blur(10px);
+  }
+
+  @include when(full) {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: #fff;
+  }
 
   @include element(spinner) {
     position: absolute;
@@ -16,7 +31,7 @@
       content: '';
       display: block;
       @include circle(60px);
-      border: 7px solid $active;
+      border: 7px solid $secondary;
       border-right-color: transparent;
       margin: auto;
       will-change: transform;
@@ -38,12 +53,29 @@
 
     > .icon {
       margin: auto;
-      color: $active;
+      color: $secondary;
       font-size: 60px;
     }
 
     @include when(visible) {
       display: flex;
+    }
+  }
+
+  @include element(actions) {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    padding-right: 20px;
+    right: 0;
+
+    > .button {
+      opacity: .6;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 

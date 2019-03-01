@@ -9,7 +9,7 @@
   }
 
   @include when(disabled) {
-    color: $disabled;
+    color: $dark;
   }
 
   @include modifier(large) {
@@ -17,6 +17,14 @@
 
     + .button {
       margin-left: 30px;
+    }
+  }
+
+  @include when(dark) {
+    color: $dark;
+
+    @include when(disabled) {
+      color: $white;
     }
   }
 }

@@ -1,5 +1,5 @@
 import Player from 'player';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { _log, _warn } from 'tools/log';
 import BEMProvider from 'tools/bem-classname';
 import Icon from 'components/Icon';
@@ -15,6 +15,8 @@ export default function Screen() {
   let domLayer: HTMLIFrameElement;
 
   const { jumping } = usePlayerStatus();
+
+  const fullScreen = useStore<boolean>('fullScreen');
 
   useEffect(
     () => {
@@ -32,7 +34,10 @@ export default function Screen() {
   const error = useStore<boolean>('error');
 
   return (
-    <div {...bem({ blur: jumping })} ref={ele => (screen = ele!)}>
+    <div
+      {...bem({ blur: jumping, full: fullScreen })}
+      ref={ele => (screen = ele!)}
+    >
       <div {...bem('::spinner', { hidden: loaded || error })} />
 
       <div {...bem('::error', { visible: error })}>

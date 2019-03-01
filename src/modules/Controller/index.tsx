@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import BEMProvider from 'tools/bem-classname';
 import Button from 'components/Button';
 import Player from 'player';
@@ -9,11 +9,13 @@ import {
   usePlayerStatus
 } from 'player/hooks';
 import { _ms2Duration } from 'tools/utils';
+import Store, { useStore } from 'stores';
 
 const bem = BEMProvider('controller');
 
 export default function Controller() {
   const { duration } = usePlayerDuration();
+
   const currentTime = usePlayerCurrentTime();
   const {
     inited,
@@ -23,6 +25,8 @@ export default function Controller() {
     over,
     jumping
   } = usePlayerStatus();
+
+  const fullScreen = useStore<boolean>('fullScreen');
 
   const hanldeNormalSpeedClick = () => {
     over ? Player.replay() : playing ? Player.pause() : Player.play();
@@ -39,7 +43,7 @@ export default function Controller() {
   if (percent > 100) percent = 100;
 
   return (
-    <section {...bem('$B lr-center')}>
+    <section {...bem('$B lr-center', { full: fullScreen })}>
       <div
         {...bem('::progress', { jumping })}
         style={{ '--percent': `${percent}%` } as any}
@@ -51,10 +55,18 @@ export default function Controller() {
       <p {...bem('::time')}>{timeIndicator}</p>
 
       <div {...bem('::actions lr-center')}>
-        <Button
+      <Button
+          dark={fullScreen}
           icon={over ? 'replay' : playing ? 'pause' : 'play'}
           disabled={!allowInteractive}
           onClick={hanldeNormalSpeedClick}
+        />
+
+        <Button
+          dark={fullScreen}
+          icon={fullScreen ? 'fullscreen_exit' : 'fullscreen'}
+          disabled={!allowInteractive}
+          onClick={() => Store.setFullScreen(!fullScreen)}
         />
 
         {/* <Button
@@ -69,8 +81,10 @@ export default function Controller() {
 
 async function handleJump(evt) {
   const { pageX, target } = evt as MouseEvent;
+  const targetX = target as HTMLDivElement;
 
-  const percent = pageX / (target as HTMLDivElement).offsetWidth;
+  const percent =
+    (pageX - targetX.getBoundingClientRect().left) / targetX.offsetWidth;
 
   await Player.jump(percent);
 }

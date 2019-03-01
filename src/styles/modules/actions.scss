@@ -1,8 +1,17 @@
 @include block(actions) {
   position: relative;
+  z-index: 2;
   grid-area: actions;
   overflow: hidden;
   padding: 10px 0 0 10px;
+
+  @include when(full) {
+    transition: opacity 0.2s $perfect-timing;
+
+    @include element(mask) {
+      display: none;
+    }
+  }
 
   @include element(container) {
     margin: 0;
@@ -43,12 +52,12 @@
 
     &::before {
       top: 0;
-      background-image: linear-gradient(to bottom, $dark, transparent);
+      background-image: linear-gradient(to bottom, $black, transparent);
     }
 
     &::after {
       bottom: 0;
-      background-image: linear-gradient(to top, $dark, transparent);
+      background-image: linear-gradient(to top, $black, transparent);
     }
   }
 }
@@ -78,6 +87,7 @@
   }
 
   &::before {
+    // 长方形块
     content: '';
     display: block;
     left: 55px;
@@ -86,7 +96,7 @@
     bottom: 2px;
     border-radius: 3px;
     position: absolute;
-    background-color: $inactive;
+    background-color: $tertiary;
     @include perfect-transition;
   }
 
@@ -94,7 +104,7 @@
     color: mix(#b8b0c9, transparent, 60);
 
     &::before {
-      background-color: mix($active, transparent, 60);
+      background-color: mix($secondary, transparent, 60);
     }
 
     @include element(time) {
@@ -111,7 +121,7 @@
       right: 0;
       top: 0;
       bottom: 0;
-      background-color: $active;
+      background-color: $secondary;
     }
 
     @include element(time) {

@@ -8,6 +8,7 @@ type props = {
   icon: string;
   text?: string;
   disabled?: boolean;
+  dark?: boolean;
   small?: boolean;
   onClick?: (evt: React.MouseEvent) => any;
 } & IconButtonProps;
@@ -18,6 +19,7 @@ export default function Button({
   icon,
   text,
   small,
+  dark,
   disabled = false,
   onClick,
   ...iconButtonProps
@@ -31,7 +33,7 @@ export default function Button({
   }
 
   return (
-    <div {...bem({ disabled })}>
+    <div {...bem({ disabled, dark })}>
       <IconButton color="inherit" onClick={clickHandler} {...iconButtonProps}>
         <Icon name={icon} large={!small} />
       </IconButton>

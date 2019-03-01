@@ -19,6 +19,7 @@ export default function Actions() {
 
   const actions = useStore<any[]>('criticalActionIndexs');
   const recordList = useStore<any[]>('recordList');
+  const fullScreen = useStore<boolean>('fullScreen');
 
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -95,7 +96,7 @@ export default function Actions() {
 
   return (
     <div
-      {...bem()}
+      {...bem({ full: fullScreen })}
       ref={actionsRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

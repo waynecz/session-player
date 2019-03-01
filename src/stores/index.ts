@@ -9,6 +9,7 @@ type StoreGetter = {
   sessionInfo: any
   loaded: boolean
   error: boolean
+  fullScreen: boolean
 }
 
 type StoreSetter = {
@@ -19,6 +20,7 @@ type StoreSetter = {
   setReferer(ref: string): void
   setSessionInfo(info: any): void
   setError(val: boolean): void
+  setFullScreen(val: boolean): void
 }
 
 type StoreStruct = StoreGetter & StoreSetter
@@ -41,6 +43,9 @@ class StoreClass implements StoreStruct {
 
   @observable
   public error: boolean = false
+
+  @observable
+  public fullScreen: boolean = false
 
 
   public loadRecorderData = (list: Record[], ref: string, info?: any): void => {
@@ -69,11 +74,15 @@ class StoreClass implements StoreStruct {
   public setError = (val: boolean): void => {
     this.error = val
   }
+
+  public setFullScreen = (val: boolean): void => {
+    this.fullScreen = val
+  }
 }
 
 const Store: StoreStruct = new StoreClass()
 
-export const useStore = <T>(key: keyof StoreGetter, cb?: any): T => {
+export const useStore = <T = any>(key: keyof StoreGetter, cb?: any): T => {
   const [value, setValue] = useState<T>(Store[key] as any)
 
   useEffect(
