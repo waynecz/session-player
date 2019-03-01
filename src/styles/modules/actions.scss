@@ -197,3 +197,40 @@
     }
   }
 }
+
+.is-full {
+  @include block(record) {
+    color: rgba(255, 255, 255, 0.582);
+
+    > .icon {
+      color: #fff;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    &::before {
+      background-color: $secondary;
+      border-radius: 4px;
+      box-shadow: 0 4px 9px -2px mix($dark, transparent, 80);
+    }
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.72);
+
+      &::before {
+        background-color: mix($secondary, $primary, 70);
+      }
+  
+      @include element(time) {
+        opacity: 0.7;
+      }
+    }
+
+    @include when(active) {
+      color: #fff;
+
+      &::before {
+        background-color: $primary;
+      }
+    }
+  }
+}
