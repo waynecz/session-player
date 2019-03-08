@@ -9,7 +9,7 @@ import {
   usePlayerStatus
 } from 'player/hooks';
 import { _ms2Duration } from 'tools/utils';
-import Store, { useStore } from 'stores';
+import Store, { useStoreState } from 'stores';
 
 const bem = BEMProvider('controller');
 
@@ -26,7 +26,7 @@ export default function Controller() {
     jumping
   } = usePlayerStatus();
 
-  const fullScreen = useStore<boolean>('fullScreen');
+  const fullScreen = useStoreState('fullScreen');
 
   const hanldeNormalSpeedClick = () => {
     over ? Player.replay() : playing ? Player.pause() : Player.play();

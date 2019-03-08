@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { _log, _warn } from 'tools/log';
 import BEMProvider from 'tools/bem-classname';
 import Icon from 'components/Icon';
-import { useStore } from 'stores';
+import { useStoreState, useStore } from 'stores';
 import { usePlayerStatus } from 'player/hooks';
 
 const bem = BEMProvider('screen');
@@ -15,8 +15,6 @@ export default function Screen() {
   let domLayer: HTMLIFrameElement;
 
   const { jumping } = usePlayerStatus();
-
-  const fullScreen = useStore<boolean>('fullScreen');
 
   useEffect(
     () => {
@@ -30,8 +28,7 @@ export default function Screen() {
     [null]
   );
 
-  const loaded = useStore<boolean>('loaded');
-  const error = useStore<boolean>('error');
+  const {error, loaded, fullScreen } = useStore();
 
   return (
     <div

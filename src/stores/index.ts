@@ -3,14 +3,14 @@ import { observable, observe } from 'mobx'
 import { Record } from 'session-recorder/dist/models/observers'
 
 type StoreGetter = {
-  criticalActionIndexs: number[]
+  criticalActionIndexs: { record: number; time: number }[];
   recordList: Record[]
   referer: string
   sessionInfo: any
   loaded: boolean
   error: boolean
   fullScreen: boolean
-}
+};
 
 type StoreSetter = {
   loadRecorderData(records: Record[], ref: string, info?: any): void
@@ -21,13 +21,13 @@ type StoreSetter = {
   setSessionInfo(info: any): void
   setError(val: boolean): void
   setFullScreen(val: boolean): void
-}
+};
 
-type StoreStruct = StoreGetter & StoreSetter
+type StoreStruct = StoreGetter & StoreSetter;
 
 class StoreClass implements StoreStruct {
   @observable
-  public criticalActionIndexs: number[] = []
+  public criticalActionIndexs: any[] = []
 
   @observable
   public recordList: Record[] = []
@@ -80,28 +80,40 @@ class StoreClass implements StoreStruct {
   }
 }
 
-const Store: StoreStruct = new StoreClass()
+const Store: StoreStruct = new StoreClass();
 
-export const useStore = <T = any>(key: keyof StoreGetter, cb?: any): T => {
-  const [value, setValue] = useState<T>(Store[key] as any)
+export const useStore = (): StoreGetter => {
+  const [value, setValue] = useState(Store);
 
-  useEffect(
-    () => {
-      observe(
-        Store,
-        key,
-        (): void => {
-          setValue(Store[key] as any)
+  useEffect(() => {
+    observe(
+      Store,
+      (): void => {
+        setValue(Store);
+      }
+    );
+  }, [null]);
 
-          cb && cb(Store[key])
-        },
-        true
-      )
-    },
-    [key, cb]
-  )
+  return value as StoreGetter;
+};
 
-  return value
-}
+export const useStoreState = <K extends keyof StoreGetter>(
+  key: K
+): StoreGetter[K] => {
+  const [value, setValue] = useState(Store[key]);
 
-export default Store
+  useEffect(() => {
+    observe(
+      Store,
+      key,
+      (): void => {
+        setValue(Store[key]);
+      },
+      true
+    );
+  }, [key]);
+
+  return value as StoreGetter[K];
+};
+
+export default Store;

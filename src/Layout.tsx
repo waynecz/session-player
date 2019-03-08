@@ -10,7 +10,7 @@ import { hot, setConfig } from 'react-hot-loader';
 import { getRecorderData } from 'services/localStorage';
 import Player from 'player';
 import addHotKeys from 'player/hotkeys';
-import { useStore } from 'stores';
+import { useStoreState } from 'stores';
 import BEMProvider from 'tools/bem-classname';
 
 setConfig({ pureSFC: true } as any);
@@ -21,7 +21,7 @@ function Layout() {
   const [message, setMessage] = useState('');
   const [messageVisible, setVisible] = useState(false);
 
-  const fullScreen = useStore<boolean>('fullScreen');
+  const fullScreen = useStoreState('fullScreen');
 
   useEffect(
     () => {

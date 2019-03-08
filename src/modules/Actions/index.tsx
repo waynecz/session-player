@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useState } from 'react';
 import BEMProvider from 'tools/bem-classname';
 import Record from './Record';
-import { useStore } from 'stores';
+import { useStoreState } from 'stores';
 import { usePlayerCurrentTime } from 'player/hooks';
 import FrameWorker from 'player/frame';
 import Player from 'player';
@@ -17,9 +17,9 @@ export default function Actions() {
 
   const currentTime = usePlayerCurrentTime();
 
-  const actions = useStore<any[]>('criticalActionIndexs');
-  const recordList = useStore<any[]>('recordList');
-  const fullScreen = useStore<boolean>('fullScreen');
+  const actions = useStoreState('criticalActionIndexs');
+  const recordList = useStoreState('recordList');
+  const fullScreen = useStoreState('fullScreen');
 
   const [modalVisible, setModalVisible] = useState(false);
 
